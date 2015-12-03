@@ -6,11 +6,18 @@ INC_DIR 		= $(top_srcdir)/include/
 
 test_runner_SOURCES =  @top_srcdir@/src/TwoAuctionMechanism.cpp \
 					   @top_srcdir@/test/TwoAuctionMechanism_test.cpp \
+					   @top_srcdir@/test/twoauction_test.cpp \
 					   @top_srcdir@/test/test_runner.cpp
 
-test_runner_CPPFLAGS  = -I$(API_INC) $(LIBIPAP_CFLAGS)
+test_runner_CPPFLAGS  = -I$(API_INC) $(CPPUNIT_CFLAGS) \
+						 $(LIBGIST_CFLAGS) $(LIBPROT_CFLAGS) $(LIBFASTQUEUE_CFLAGS) \
+						 $(LIBIPAP_CFLAGS) $(LIBANSLP_CFLAGS) $(LIBANSLP_MSG_CFLAGS) \
+						 $(LIBAUCTIONFDTION_CFLAGS)
 
-test_runner_LDADD  = $(LIBIPAP_LIBS)
+test_runner_LDADD  = $(CPPUNIT_LIBS) -ldl -lcppunit \
+					 $(LIBAUCTIONFDTION_LIBS) \
+					 $(LIBPROT_LIBS) $(LIBFASTQUEUE_LIBS) $(LIBGIST_LIBS) \
+					 $(LIBIPAP_LIBS) $(LIBANSLP_MSG_LIBS) $(LIBANSLP_LIBS)
 
 TESTS = $(check_PROGRAMS)
 

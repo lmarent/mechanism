@@ -11,7 +11,7 @@
 #
 #
 
-EXTRA_DIST = ProcModule.h ProcModule.cpp ProcError.cpp
+EXTRA_DIST = MiscProcModule.h MiscProcModule.cpp ProcError.cpp
 
 pkgincludedir = $(includedir)/$(PACKAGE)
 
@@ -21,19 +21,20 @@ INC_DIR 	= $(top_srcdir)/include
 lib_LTLIBRARIES = libtwoauction.la
 
 if ENABLE_DEBUG
-AM_CXXFLAGS = -I$(top_srcdir)/include \
-   			  -g  -fno-inline -DDEBUG -D_GLIBCXX_DEBUG -ggdb
+AM_CXXFLAGS = -I$(top_srcdir)/include $(LIBIPAP_CFLAGS) $(LIBAUCTIONFDTION_CFLAGS) \
+   			  $(LIBANSLP_MSG_CFLAGS) -g  -fno-inline -DDEBUG -D_GLIBCXX_DEBUG -ggdb
 else
-AM_CXXFLAGS = -I$(top_srcdir)/include \
-			  -O2
+AM_CXXFLAGS = -I$(top_srcdir)/include $(LIBIPAP_CFLAGS) $(LIBAUCTIONFDTION_CFLAGS) \
+			  $(LIBANSLP_MSG_CFLAGS) -O2
 endif
 
-libtwoauction_la_CPPFLAGS = $(LIBIPAP_CFLAGS) $(LIBAUCTIONFDTION_CFLAGS)
+libtwoauction_la_CPPFLAGS = $(LIBIPAP_CFLAGS) $(LIBAUCTIONFDTION_CFLAGS) \
+							$(LIBANSLP_MSG_CFLAGS)
 
 libtwoauction_la_SOURCES = TwoAuctionMechanism.cpp \
 						   twoauction.cpp
 
-libtwoauction_la_LIBADD = $(LIBIPAP_LIBS)
+libtwoauction_la_LIBADD = MiscProcModule.lo ProcError.lo $(LIBIPAP_LIBS)
 
 LDADD = $(LIBIPAP_LIBS) $(LIBAUCTIONFDTION_LIBS)
 
