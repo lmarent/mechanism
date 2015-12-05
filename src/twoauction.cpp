@@ -9,8 +9,9 @@
 #include "config.h"
 #include "stdincpp.h"
 #include "ProcError.h"
-#include "ProcModule.h"
+#include "MiscProcModule.h"
 #include "TwoAuctionMechanism.h"
+#include "FieldValue.h"
 
 const int MOD_INIT_REQUIRED_PARAMS = 1;
 
@@ -25,28 +26,31 @@ float getResourceAvailability( auction::configParam_t *params, int auction )
 {
  
 #ifdef DEBUG
-	 cout << "Starting getResourceAvailability - auction:" << auction <<  endl;
+	 cout << "Starting getResourceAvailability - auction type:" << auction <<  endl;
 #endif
 	
-	// Check the parameter auction.
+	// Check the parameter auction type.
 	if ((auction < 0) || (auction > 1)){
 		throw auction::ProcError(AUM_PROC_PARAMETER_ERROR, 
-					"bas init module - auction requested is wrong");
+					"two auction init module - auction type requested is wrong");
 	}
 	
      float bandwidth = 0;
      int numparams = 0;
      
      while (params[0].name != NULL) {
+
+		
 		// in all the application we establish the rates and 
 		// burst parameters in bytes
 		if (auction == 0){		        
-			if (!strcmp(params[0].name, "bandwidthlow")) {
+			cout << "in auction param name:" << params[0].name << endl; 
+			if (!strcmp(params[0].name, "bandwidth01")) {
 				bandwidth = (float) parseFloat( params[0].value );
 				numparams++;
 			}
 		} else {
-			if (!strcmp(params[0].name, "bandwidthhigh")) {
+			if (!strcmp(params[0].name, "bandwidth02")) {
 				bandwidth = (float) parseFloat( params[0].value );
 				numparams++;
 			}
@@ -56,11 +60,11 @@ float getResourceAvailability( auction::configParam_t *params, int auction )
      
      if (numparams == 0)
 		throw auction::ProcError(AUM_PROC_PARAMETER_ERROR, 
-					"bas init module - not enought parameters");
+					"two auction init module - not enought parameters");
 	
 	if (bandwidth <= 0)
 		throw auction::ProcError(AUM_PROC_BANDWIDTH_AVAILABLE_ERROR, 
-					"bas init module - The given bandwidth parameter is incorrect");
+					"two auction init module - The given bandwidth parameter is incorrect");
 
 #ifdef DEBUG
 	cout << "Ending getResourceAvailability - Bandwidth:" << bandwidth << endl;
@@ -83,19 +87,19 @@ double getReservePrice( auction::configParam_t *params, int auction )
 	// Check the parameter auction.
 	if ((auction < 0) || (auction > 1)){
 		throw auction::ProcError(AUM_PROC_PARAMETER_ERROR, 
-					"bas init module - auction requested is wrong");
+					"two auction init module - auction requested is wrong");
 	}
     
     while (params[0].name != NULL) {
 		// in all the application we establish the rates and 
 		// burst parameters in bytes
 		if (auction == 0){		        				
-			if (!strcmp(params[0].name, "reservepricelow")) {
+			if (!strcmp(params[0].name, "reserveprice01")) {
 				price = (double) parseDouble( params[0].value );
 				numparams++;
 			}
 		} else {
-			if (!strcmp(params[0].name, "reservepricehigh")) {
+			if (!strcmp(params[0].name, "reserveprice02")) {
 				price = (double) parseDouble( params[0].value );
 				numparams++;
 			}
@@ -105,11 +109,11 @@ double getReservePrice( auction::configParam_t *params, int auction )
      
     if (numparams == 0)
 		throw auction::ProcError(AUM_PROC_PARAMETER_ERROR, 
-					"bas init module - not enought parameters");
+					"two auction init module - not enought parameters");
 	
 	if (price < 0)
 		throw auction::ProcError(AUM_PRICE_RESERVE_ERROR, 
-					"bas init module - The given reserve price is incorrect");
+					"two auction init module - The given reserve price is incorrect");
 	
 #ifdef DEBUG
 	cout << "Ending getReservePrice" << price << endl;
@@ -131,19 +135,19 @@ double getMaximumValue( auction::configParam_t *params, int auction )
 	// Check the parameter auction.
 	if ((auction < 0) || (auction > 1)){
 		throw auction::ProcError(AUM_PROC_PARAMETER_ERROR, 
-					"bas init module - auction requested is wrong");
+					"two auction init module - auction requested is wrong");
 	}
     
     while (params[0].name != NULL) {
 		// in all the application we establish the rates and 
 		// burst parameters in bytes
 		if (auction == 0){		        				
-			if (!strcmp(params[0].name, "maximumvaluelow")) {
+			if (!strcmp(params[0].name, "maxvalue01")) {
 				maximumValue = (double) parseDouble( params[0].value );
 				numparams++;
 			}
 		} else {
-			if (!strcmp(params[0].name, "maximumvaluehigh")) {
+			if (!strcmp(params[0].name, "maxvalue02")) {
 				maximumValue = (double) parseDouble( params[0].value );
 				numparams++;
 			}
@@ -153,11 +157,11 @@ double getMaximumValue( auction::configParam_t *params, int auction )
      
     if (numparams == 0)
 		throw auction::ProcError(AUM_PROC_PARAMETER_ERROR, 
-					"bas init module - not enought parameters");
+					"two auction init module - not enought parameters");
 	
 	if (maximumValue < 0)
 		throw auction::ProcError(AUM_PRICE_RESERVE_ERROR, 
-					"bas init module - The given reserve price is incorrect");
+					"two auction init module - The given reserve price is incorrect");
 	
 #ifdef DEBUG
 	cout << "Ending getMaximumValue" << maximumValue << endl;
@@ -187,11 +191,11 @@ time_t getTime( auction::configParam_t *params, string name )
      
      if (numparams == 0)
 		throw auction::ProcError(AUM_PROC_PARAMETER_ERROR, 
-					"bas init module - not enought parameters");
+					"two auction init module - not enought parameters");
 	
 	if (tim == 0)
 		throw auction::ProcError(AUM_DATETIME_NOT_DEFINED_ERROR, 
-					"bas init module - The given time is incorrect");
+					"two auction init module - The given time is incorrect");
 	
 #ifdef DEBUG
 	cout << "get time" << tim << endl;
@@ -205,7 +209,7 @@ time_t getTime( auction::configParam_t *params, string name )
 void auction::initModule( auction::configParam_t *params )
 {
 
-	cout <<  "bas module: start init module" << endl;
+	cout <<  "two auction module: start init module" << endl;
 	int numparams = 0;
 	
     while (params[0].name != NULL) {
@@ -217,32 +221,32 @@ void auction::initModule( auction::configParam_t *params )
             lastId = parseUInt32( params[0].value );
 			numparams++;
 #ifdef DEBUG
-		fprintf( stdout, "bas module: nextId: [ %"PRIu32" ] \n", lastId );
+		fprintf( stdout, "two auction module: nextId: [ %"PRIu32" ] \n", lastId );
 #endif
         }
         params++;
     }
 
 	 if ( numparams != MOD_INIT_REQUIRED_PARAMS )
-		 throw ProcError("bas init module - not enought parameters");
+		 throw ProcError("two auction init module - not enought parameters");
 
 	// Bring fields defined for ipap_messages;
 	g_ipap_fields.initialize_forward();
     g_ipap_fields.initialize_reverse();
 	
-	cout << "bas module: end init module" << endl;
+	cout << "two auction module: end init module" << endl;
 
 }
 
 void auction::destroyModule( auction::configParam_t *params )
 {
 #ifdef DEBUG
-	fprintf( stdout, "bas module: start destroy module \n");
+	fprintf( stdout, "two auction module: start destroy module \n");
 #endif
 
 
 #ifdef DEBUG
-	fprintf( stdout, "bas module: end destroy module \n");
+	fprintf( stdout, "two auction module: end destroy module \n");
 #endif
 
 }
@@ -251,16 +255,27 @@ void auction::destroyModule( auction::configParam_t *params )
 string makeKey(string auctionSet, string auctionName, 
 				  string bidSet, string bidName)
 {
-	return auctionSet + auctionName + bidSet + bidName;
+	return auctionSet + "|" + auctionName + "|" + bidSet + "|" + bidName;
+}
+
+string getBidName(string allocationKey)
+{
+	cout << "start getBidName" << endl;
+	
+	std::size_t found = allocationKey.find_last_of("|");
+	string bidName = allocationKey.substr(found+1);
+	
+	cout << "ending getBidName:" << bidName << endl;
+	return bidName;
 }
 
 auction::BiddingObject *
 createAllocation( auction::fieldDefList_t *fieldDefs, auction::fieldValList_t *fieldVals,
-				  string auctionSet, string auctionName, string bidSet, string sessionId, 
+				  string auctionSet, string auctionName, string bidSet, string bidName, string sessionId, 
 				  time_t start, time_t stop, float quantity, double price )
 {										  		
 #ifdef DEBUG
-	fprintf( stdout, "bas module: start create allocation \n");
+	fprintf( stdout, "two auction module: start create allocation \n");
 #endif
 
 	uint64_t timeUint64;
@@ -274,10 +289,15 @@ createAllocation( auction::fieldDefList_t *fieldDefs, auction::fieldValList_t *f
 	// The set for the allocation is the same as the initial bid.
 	string allocset = bidSet;
 	
-	// Incrememt the next id given.
-	lastId++;
-	string allocname = uint32ToString(lastId);
-		
+	// Create the id given.
+	uint32_t lid = getId();
+	string allocname = uint32ToString(lid);
+	cout << "before calling refidobject" << endl;
+	// Insert reference bidding object
+	ipap_field fRef = g_ipap_fields.get_field(0, IPAP_FT_REFIDBIDDINGOBJECT);	
+	
+	fillField(fieldDefs, fieldVals, 0, IPAP_FT_REFIDBIDDINGOBJECT, bidName, &elementFields);
+
 	// Insert quantity
 	ipap_field fQuantity = g_ipap_fields.get_field(0, IPAP_FT_QUANTITY);	
 	ipap_value_field fVQuantity = fQuantity.get_ipap_value_field( quantity );
@@ -285,7 +305,7 @@ createAllocation( auction::fieldDefList_t *fieldDefs, auction::fieldValList_t *f
 	fillField(fieldDefs, fieldVals, 0, IPAP_FT_QUANTITY, squantity, &elementFields);
 
 #ifdef DEBUG
-	fprintf( stdout, "bas module: start create allocation after quantity \n");
+	cout << "two auction module: start create allocation after quantity" << std::endl;
 #endif
 
 	// Insert Unit Value
@@ -295,7 +315,7 @@ createAllocation( auction::fieldDefList_t *fieldDefs, auction::fieldValList_t *f
 	fillField(fieldDefs, fieldVals, 0, IPAP_FT_UNITVALUE, svalue, &elementFields);
 
 #ifdef DEBUG
-	fprintf( stdout, "bas module: start create allocation after unitvalue \n");
+	cout << "two auction module: start create allocation after unitvalue " << std::endl;
 #endif
 
 	string recordId = "Unique";
@@ -316,7 +336,7 @@ createAllocation( auction::fieldDefList_t *fieldDefs, auction::fieldValList_t *f
 	fillField(fieldDefs, fieldVals, 0, IPAP_FT_STARTSECONDS, sstart, &optionFields);
 
 #ifdef DEBUG
-	fprintf( stdout, "bas module: start create allocation after startSeconds \n");
+	cout << "two auction module: start create allocation after startSeconds" << std::endl;
 #endif
 	
 	// Insert stop
@@ -327,7 +347,7 @@ createAllocation( auction::fieldDefList_t *fieldDefs, auction::fieldValList_t *f
 	fillField(fieldDefs, fieldVals, 0, IPAP_FT_ENDSECONDS, sstop, &optionFields);
 
 #ifdef DEBUG
-	fprintf( stdout, "bas module: start create allocation after endSeconds \n");
+	cout << "two auction module: start create allocation after endSeconds" << std::endl;
 #endif		
 
 	fillField(fieldDefs, fieldVals, 0, IPAP_FT_IDRECORD, recordId, &optionFields);
@@ -341,7 +361,7 @@ createAllocation( auction::fieldDefList_t *fieldDefs, auction::fieldValList_t *f
 	alloc->setSession(sessionId);
 	
 #ifdef DEBUG
-	fprintf( stdout, "bas module: ending create allocation \n");
+	cout << "two auction module: ending create allocation" << std::endl;
 #endif	
 
 	return alloc;
@@ -350,24 +370,28 @@ createAllocation( auction::fieldDefList_t *fieldDefs, auction::fieldValList_t *f
 double getAllocationQuantity(auction::fieldValList_t *fieldVals, auction::BiddingObject *allocation)
 {
 #ifdef DEBUG
-	fprintf( stdout, "bas module: starting getAllocationQuantity \n");
+	fprintf( stdout, "two auction module: starting getAllocationQuantity \n");
 #endif	
 	
 	float temp_qty = 0; 
 	auction::elementList_t *elements = allocation->getElements();
-	
+		
 	// there is only one element. 
 	auction::fieldListIter_t field_iter;
 	auction::field_t field;
 	for (field_iter = (elements->begin()->second).begin(); 
 				field_iter != (elements->begin()->second).end(); ++field_iter )
-	{
-		if ((field_iter->name).compare("quantity")){
+	{				
+		if ((field_iter->name).compare("quantity") == 0 ){
 			field = *field_iter; 
 			temp_qty = parseFloat( ((field.value)[0]).getValue());
 			break;
 		}
 	}
+
+#ifdef DEBUG
+	fprintf( stdout, "two auction module: ending getAllocationQuantity \n");
+#endif	
 	
 	return temp_qty;
 
@@ -393,6 +417,11 @@ double getBidPrice(auction::BiddingObject *bid)
 void separateBids(auction::biddingObjectDB_t *bids,double bl, double bh, 
 					auction::biddingObjectDB_t *bids_low, auction::biddingObjectDB_t *bids_high)
 {
+
+#ifdef DEBUG
+	cout << "Starting separateBids" << endl;
+#endif
+
 	auction::biddingObjectDB_t::iterator iter;
 	for (iter = bids->begin();iter != bids->end(); ++iter){
 		auction::BiddingObject *bid = *iter;
@@ -407,16 +436,20 @@ void separateBids(auction::biddingObjectDB_t *bids,double bl, double bh,
 			}
 		}
 	}
+
+#ifdef DEBUG
+	cout << "Ending separateBids" << endl;
+#endif		
+
 }
 
-void addQuantityAllocation(auction::fieldValList_t *fieldVals, 
-									auction::BiddingObject *allocation, float quantity)
+void changeAllocationPrice(auction::fieldValList_t *fieldVals, 
+									auction::BiddingObject *allocation, double price)
 {
 
 #ifdef DEBUG
-	fprintf( stdout, "bas module: starting increment quantity allocation \n");
-#endif	
-
+	cout << "two auction module: starting changeAllocationPrice" << endl;
+#endif
 
 	auction::elementList_t *elements = allocation->getElements();
 	
@@ -426,33 +459,69 @@ void addQuantityAllocation(auction::fieldValList_t *fieldVals,
 	for (field_iter = (elements->begin()->second).begin(); 
 				field_iter != (elements->begin()->second).end(); ++field_iter )
 	{
-		if ((field_iter->name).compare("quantity")){
+		if ((field_iter->name).compare("unitprice") == 0){
 			// Delete the field. 
 			field = *field_iter; 
-			(elements->begin()->second).erase(field_iter);
+			string fvalue = doubleToString(price);
+			field_iter->value[0] = auction::FieldValue(field_iter->type, fvalue);
 			break;
 		}
 	}
-	
-	if ( !(field.name.empty())){
-		// Insert again the field.
-		float temp_qty = parseFloat( ((field.value)[0]).getValue());
-		temp_qty += quantity;
-		string fvalue = floatToString(temp_qty);
-		auction::IpApMessageParser::parseFieldValue(fieldVals, fvalue, &field);
-		(elements->begin()->second).push_back(field);
-	} else {
+	if ( field.name.empty()){
 		throw auction::ProcError("Field quantity was not included in the allocation");
 	}
 
 #ifdef DEBUG
-	fprintf( stdout, "bas module: ending increment quantity allocation \n");
+	cout << "two auction module: ending changeAllocationPrice" << endl;
+#endif	
+
+
+}
+
+void addQuantityAllocation(auction::fieldValList_t *fieldVals, 
+									auction::BiddingObject *allocation, float quantity)
+{
+
+#ifdef DEBUG
+	cout << "two auction module: starting add quantity allocation" << endl;
+#endif
+
+	auction::elementList_t *elements = allocation->getElements();
+	
+	// there is only one element. 
+	auction::fieldListIter_t field_iter;
+	auction::field_t field;
+	for (field_iter = (elements->begin()->second).begin(); 
+				field_iter != (elements->begin()->second).end(); ++field_iter )
+	{
+		if ((field_iter->name).compare("quantity") == 0){
+			// Delete the field. 
+			field = *field_iter; 
+			float temp_qty = parseFloat( ((field.value)[0]).getValue());
+			temp_qty += quantity;
+			string fvalue = floatToString(temp_qty);
+			field_iter->value[0] = auction::FieldValue(field_iter->type, fvalue);
+			break;
+		}
+	}
+	
+	if ( field.name.empty()){
+		throw auction::ProcError("Field quantity was not included in the allocation");
+	}
+
+#ifdef DEBUG
+	cout << "two auction module: ending add quantity allocation" << endl;
 #endif	
 	
 }
 
 int calculateRequestedQuantities(auction::biddingObjectDB_t *bids)
 {
+
+#ifdef DEBUG
+	cout << "two auction module: starting calculateRequestedQuantities" << endl;
+#endif	
+	
 	int sumQuantity = 0;
 	
 	auction::biddingObjectDBIter_t bid_iter; 
@@ -467,6 +536,10 @@ int calculateRequestedQuantities(auction::biddingObjectDB_t *bids)
 			sumQuantity = sumQuantity + quantity;
 		}
 	}
+
+#ifdef DEBUG
+	cout << "two auction module: ending calculateRequestedQuantities" << sumQuantity << endl;
+#endif
 	
 	return sumQuantity;
 }
@@ -476,6 +549,7 @@ double executeAuction(auction::fieldDefList_t *fieldDefs, auction::fieldValList_
 					auction::biddingObjectDB_t *bids, double qtyAvailable, 
 					map<string,auction::BiddingObject *> &allocations)
 {
+
 
 	std::multimap<double, alloc_proc_t>  orderedBids;
 	
@@ -505,7 +579,7 @@ double executeAuction(auction::fieldDefList_t *fieldDefs, auction::fieldValList_
 	double sellPrice = 0;
 
 #ifdef DEBUG	
-	cout << "bas module- qty available:" << qtyAvailable << endl;
+	cout << "two auction module- qty available:" << qtyAvailable << endl;
 #endif
 	
 	std::multimap<double, alloc_proc_t>::iterator it = orderedBids.end();
@@ -528,7 +602,7 @@ double executeAuction(auction::fieldDefList_t *fieldDefs, auction::fieldValList_
 	} while (it != orderedBids.begin());
 
 #ifdef DEBUG	
-	cout << "bas module: after executing the auction" << (int) bids->size() << endl;
+	cout << "two auction module: after executing the auction" << (int) bids->size() << endl;
 #endif
 	
 	map<string,auction::BiddingObject *>::iterator alloc_iter;
@@ -548,7 +622,7 @@ double executeAuction(auction::fieldDefList_t *fieldDefs, auction::fieldValList_
 		else{
 			auction::BiddingObject *alloc = 
 				createAllocation(fieldDefs, fieldVals, aset, aname, 
-								  (it->second).bidSet, (it->second).sessionId,
+								  (it->second).bidSet, (it->second).bidName, (it->second).sessionId,
 								    start, stop, (it->second).quantity, sellPrice);
 									
 			allocations[makeKey(aset, aname,
@@ -557,11 +631,17 @@ double executeAuction(auction::fieldDefList_t *fieldDefs, auction::fieldValList_
 	    
 	} while (it != orderedBids.begin());
 
+#ifdef DEBUG	
+	cout << "two auction module: after create allocations" << (int) bids->size() << endl;
+#endif
+
 	return sellPrice;
 }
 
 double getProbability()
 {
+	cout << "start getProbability:" << endl;
+	
 	unsigned int nbr;
 	
 	int ret = RAND_bytes((unsigned char *) &nbr, sizeof(nbr));
@@ -575,16 +655,23 @@ double getProbability()
 	double dumax = umax;
 	double prob = nbr / (dumax - dumin);
 	
+	cout << "ending getProbability:" << prob << endl;
+	
 	return prob;
 }
 
 void ApplyMechanism(auction::fieldDefList_t *fieldDefs, auction::fieldValList_t *fieldVals,
 					time_t start, time_t stop, map<string,auction::BiddingObject *> &allocations, 
-					double price, double qStart)
+					double price, double qStar)
 {
+
+	cout << "starting ApplyMechanism qStar:" << qStar << endl;
 
 	map<string,auction::BiddingObject *>::iterator iter; 
 	for (iter = allocations.begin(); iter != allocations.end(); ++iter){
+		
+		string bidName = getBidName(iter->first);
+				
 		auction::BiddingObject *alloc = iter->second;
 		int quantity = floor(getAllocationQuantity(fieldVals, alloc)); 
 		float unitsToPass = 0;
@@ -592,22 +679,30 @@ void ApplyMechanism(auction::fieldDefList_t *fieldDefs, auction::fieldValList_t 
 			
 			double prob = getProbability();
 			
-			if (qStart <= prob)  // pass a unit.
+			if (prob <= qStar)  // pass a unit.
 				unitsToPass = unitsToPass + 1;
 		}
+				
+		if (unitsToPass > 0){
 		
-		if (unitsToPass > 0 ){
-			auction::BiddingObject * alloc2 = createAllocation( fieldDefs, fieldVals,
+			if (unitsToPass < quantity){
+				auction::BiddingObject * alloc2 = createAllocation( fieldDefs, fieldVals,
 								alloc->getAuctionSet(), alloc->getAuctionName(), 
-								alloc->getBiddingObjectSet(), alloc->getSession(), 
-								start, stop, unitsToPass, price );
+								alloc->getBiddingObjectSet(), bidName,
+								alloc->getSession(), start, stop, unitsToPass, price );
 				  
-			float unitsToAdd = unitsToPass *-1;
-			addQuantityAllocation(fieldVals, alloc, unitsToAdd);
-			allocations[makeKey(alloc2->getAuctionSet(), alloc2->getAuctionName(),
+				float unitsToAdd = unitsToPass *-1;
+				addQuantityAllocation(fieldVals, alloc, unitsToAdd);
+				
+				allocations[makeKey(alloc2->getAuctionSet(), alloc2->getAuctionName(),
 								alloc2->getBiddingObjectSet(), alloc2->getBiddingObjectName())] = alloc2;
-		}				
+			} else {
+				changeAllocationPrice(fieldVals, alloc, price);	
+			}
+		}
 	}
+	
+	cout << "ending ApplyMechanism" << endl;
 }
 
 void auction::execute( auction::fieldDefList_t *fieldDefs, auction::fieldValList_t *fieldVals,  
@@ -617,15 +712,15 @@ void auction::execute( auction::fieldDefList_t *fieldDefs, auction::fieldValList
 {
 
 #ifdef DEBUG
-	cout << "bas module: start execute" << (int) bids->size() << endl;
+	cout << "two auction module: start execute" << (int) bids->size() << endl;
 #endif
 
 	float bandwidth_to_sell_low = getResourceAvailability( params, 0 );
 	float bandwidth_to_sell_high = getResourceAvailability( params, 1 );
 	double reserve_price_low = getReservePrice( params, 0 );	
-	double reserve_price_high = getReservePrice( params, 0 );	
+	double reserve_price_high = getReservePrice( params, 1 );	
 	double bl = getMaximumValue( params, 0 );	
-	double bh = getMaximumValue( params, 0 );	
+	double bh = getMaximumValue( params, 1 );	
 	
 	auction::biddingObjectDB_t *bids_low = new auction::biddingObjectDB_t();
 	auction::biddingObjectDB_t *bids_high = new auction::biddingObjectDB_t();
@@ -645,19 +740,26 @@ void auction::execute( auction::fieldDefList_t *fieldDefs, auction::fieldValList
 	double t = 0.000001;
 	double bidF = 0.6;
 	double qStar = mechanism->zerosWithUnits(nh, nl, bh, bl, bandwidth_to_sell_high, 
-								  bandwidth_to_sell_low, reserve_price_low, 
-								  reserve_price_high, bidF, a, b, macheps, t);
+								  bandwidth_to_sell_low, reserve_price_high, 
+								  reserve_price_low, bidF, a, b, macheps, t);
 	
 	delete mechanism;
+	
+	
+	qStar = 0;
 	
 	// Execute auctions.
 	map<string,auction::BiddingObject *> alloctions_low;
 	double price_low = executeAuction( fieldDefs, fieldVals, aset, aname, start, stop, 
 									  bids_low, bandwidth_to_sell_low, alloctions_low);
 	
+	cout << "after executeAuction low budget users" << endl;
+	
 	map<string,auction::BiddingObject *> alloctions_high;
 	double price_high =	executeAuction( fieldDefs, fieldVals, aset, aname, start, stop, 
 									 bids_high, bandwidth_to_sell_low, alloctions_high);
+	
+	cout << "after executeAuction high budget users" << endl;
 	
 	// change bids from the high budget to low budget auction.
 	ApplyMechanism( fieldDefs, fieldVals, start, stop, alloctions_high, price_low, qStar);
@@ -682,7 +784,7 @@ void auction::execute( auction::fieldDefList_t *fieldDefs, auction::fieldValList
 	delete bids_high;
 	
 #ifdef DEBUG	
-	cout << "bas module: end execute" <<  endl;
+	cout << "two auction module: end execute" <<  endl;
 #endif
 }
 
@@ -691,12 +793,12 @@ void auction::execute_user( auction::fieldDefList_t *fieldDefs, auction::fieldVa
 							auction::biddingObjectDB_t **biddata )
 {
 #ifdef DEBUG
-	fprintf( stdout, "bas module: start execute_user \n");
+	fprintf( stdout, "two auction module: start execute_user \n");
 #endif
 	// Nothing to do
 
 #ifdef DEBUG
-	fprintf( stdout, "bas module: end execute_user \n");
+	fprintf( stdout, "two auction module: end execute_user \n");
 #endif
 	
 }
@@ -704,41 +806,41 @@ void auction::execute_user( auction::fieldDefList_t *fieldDefs, auction::fieldVa
 void auction::destroy( auction::configParam_t *params )
 {
 #ifdef DEBUG
-	fprintf( stdout, "bas module: start destroy \n");
+	fprintf( stdout, "two auction module: start destroy \n");
 #endif
 
 #ifdef DEBUG
-	fprintf( stdout, "bas module: end destroy \n");
+	fprintf( stdout, "two auction module: end destroy \n");
 #endif
 }
 
 void auction::reset( auction::configParam_t *params )
 {
 #ifdef DEBUG
-	fprintf( stdout, "bas module: start reset \n");
+	fprintf( stdout, "two auction module: start reset \n");
 #endif
 
 #ifdef DEBUG
-	fprintf( stdout, "bas module: end reset \n");
+	fprintf( stdout, "two auction module: end reset \n");
 #endif
 }
 
 const char* auction::getModuleInfo( int i )
 {
 #ifdef DEBUG
-	fprintf( stdout, "bas module: start getModuleInfo \n");
+	fprintf( stdout, "two auction module: start getModuleInfo \n");
 #endif
 
     /* fprintf( stderr, "count : getModuleInfo(%d)\n",i ); */
 
     switch(i) {
-    case auction::I_MODNAME:    return "Basic Auction procedure";
-    case auction::I_ID:		   return "bas";
+    case auction::I_MODNAME:    return "Two Auction Module";
+    case auction::I_ID:		    return "TwoAuction";
     case auction::I_VERSION:    return "0.1";
-    case auction::I_CREATED:    return "2015/08/03";
-    case auction::I_MODIFIED:   return "2015/08/03";
-    case auction::I_BRIEF:      return "Auction process to verify general functionality of the auction manager";
-    case auction::I_VERBOSE:    return "The auction process gives does not care about capacity and gives allocations equal to quantity requested for all bids"; 
+    case auction::I_CREATED:    return "2015/12/01";
+    case auction::I_MODIFIED:   return "2015/12/01";
+    case auction::I_BRIEF:      return "Auction process for spliting in low and high budget users";
+    case auction::I_VERBOSE:    return "The auction calculates a probability q, so high budget users are priced as low budget users."; 
     case auction::I_HTMLDOCS:   return "http://www.uniandes.edu.co/... ";
     case auction::I_PARAMS:     return "None";
     case auction::I_RESULTS:    return "The set of assigments";

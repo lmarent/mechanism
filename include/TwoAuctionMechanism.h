@@ -43,10 +43,18 @@ namespace auction {
 class TwoAuctionMechanism {
 
   public:
+	
+	/*! \short constructor for the class
+	 */
+	TwoAuctionMechanism();
+	
+	/*! \short destructor for the class
+	 */
+	~TwoAuctionMechanism();
+	
+  // protected:
 
-  protected:
-
-  private:
+  // private:
 
     /*!
      * \short   Calculates Function F_i(i,p) Defined as:
@@ -167,10 +175,11 @@ class TwoAuctionMechanism {
 		\arg   \c n		Total number of users.
 		\arg   \c k		Total number of units to auction.
 		\arg   \c b 	Maximum value that a user can pay for any unit
+		\arg   \c rph 	reserved price to pay.
 		\arg   \c bid   Proposed bid from the user.
 		\arg   \c q 	Probability that a user decides to compete in the low budget auction.
     */
-	double expectedProfitHStrategyWithUnits(int n, int k, double b, double bid, double q);
+	double expectedProfitHStrategyWithUnits(int n, int k, double b, double rp, double bid, double q);
 
     /*!
      * \short   Calculates the expected payoff when a high budget user
@@ -186,6 +195,35 @@ class TwoAuctionMechanism {
     */
 	double expectedProfitLStrategy(int nh, int nl, double bh, double bl, double bid, double q);
 
+	/*!
+     * \short   Calculates the payoff when a high budget user choose
+     * 			the strategy L(low budget auction), the number of high budget 
+     * 			users going into the low budget auction is nh, and there are
+     * 			kl units to auction (nh<kl).
+     *
+		\arg   \c nh	Total number of high budget users going into the low budget auction.
+		\arg   \c nl	Total number of low budget users.
+		\arg   \c kl	Total number of units to auction.
+		\arg   \c bl	Maximum value that a user can pay being a low budget user.
+		\arg   \c rpl	Reserved price for the low budget auction.
+		\arg   \c bid	user's bid .
+	*/
+	double expectedProfitLStrategyEnoughQuantities(int nh, int nl, int kl, double bl, double rlp, double bid );
+	
+	/*!
+     * \short   Calculates the payoff when a high budget user choose
+     * 			the strategy L(low budget auction), the number of high budget 
+     * 			users going into the low budget auction is nh, and there are
+     * 			kl units to auction (nh>=kl).
+     *
+		\arg   \c nh	Total number of high budget users going into the low budget auction.
+		\arg   \c nl	Total number of low budget users.
+		\arg   \c kl	Total number of units to auction.
+		\arg   \c bl	Maximum value that a user can pay being a low budget user.
+		\arg   \c bid	user's bid .
+	*/	
+	double expectedProfitLStrategyNotEnoughQuantities(int nh, int nl, int kl, double bl, double bid);
+
     /*!
      * \short   Calculates the expected payoff when a high budget user choose
      * 			the strategy L(low budget auction) and there is
@@ -195,11 +233,16 @@ class TwoAuctionMechanism {
 		\arg   \c nl	Total number of low budget users.
 		\arg   \c bh	Maximum value that a high budget user can pay for any unit
 		\arg   \c bl	Maximum value that a low budget user can pay for any unit
+		\arg   \c kh	Units in the high budget auction
+		\arg   \c kl	Units in the low budget auction
+		\arg   \c rph	reseve price for the high budget auction
+		\arg   \c rpl	reseve price for the low budget auction
 		\arg   \c bid   Proposed bid from the user.
 		\arg   \c q 	Probability that a user decides to compete in the low budget auction.
     */
 	double expectedProfitLStrategyWithUnits(int nh, int nl, double bh, double bl,
-											int kh, int kl, double bid, double q);
+											int kh, int kl, double rph, double rpl, 
+											double bid, double q);
 
     /*!
      * \short   Calculates the difference between the H strategy and the L strategy
@@ -212,6 +255,23 @@ class TwoAuctionMechanism {
 		\arg   \c q 	Probability that a user decides to compete in the low budget auction.
     */
 	double functionF(int nh, int nl, double bh, double bl, double bid, double q);
+	
+    /*!
+     * \short   Calculates the difference between the H strategy and the L strategy when it is using quantities.
+     *
+		\arg   \c nh	Total number of high budget users.
+		\arg   \c nl	Total number of low budget users.
+		\arg   \c bh	Maximum value that a high budget user can pay for any unit
+		\arg   \c bl	Maximum value that a low budget user can pay for any unit
+		\arg   \c kh	Number of units in the high budget auction.
+		\arg   \c kl	Number of units in the low budget auction.
+		\arg   \c rph	reseve price for the high budget auction
+		\arg   \c rpl	reseve price for the low budget auction
+		\arg   \c bid   Proposed bid from the user.
+		\arg   \c q 	Probability that a user decides to compete in the low budget auction.
+    */
+	double functionFWithUnits(int nh, int nl, double bh, double bl, int kh, int kl, double rph, double rpl, double bid, double q);
+
 
 	/* \short  Auxiliary function to calculate zeros of a function,
 	 * 		   initialize variables used
@@ -231,6 +291,11 @@ class TwoAuctionMechanism {
 	/* \short  Auxiliary function to calculate zeros of a function
 	 */
 	double zeros(int nh, int nl, double bh, double bl, double bid, double a, double b, double macheps, double t);
+
+	/* \short  Auxiliary function to calculate zeros of a function
+	 */
+	double zerosWithUnits(int nh, int nl, double bh, double bl, double kh, double kl, 
+							double rph, double rpl, double bid, double a, double b, double macheps, double t);
 
 
 };
