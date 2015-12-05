@@ -1,0 +1,42 @@
+<?xml version ="1.0" encoding="UTF-8"?>
+<!DOCTYPE AUCTIONSET SYSTEM "auctionfile.dtd"> 
+<!-- The Id must be an integer which represents the domain id-->
+<AUCTIONSET ID="1">
+  <!-- global part is the default for all auctions -->
+  <!-- overwritten by rule specific configuration -->
+  <GLOBAL>
+    <!-- how long the auctions are active - value in seconds-->
+    <PREF NAME="Duration">100000</PREF>
+
+    <!-- How often they should be run - value in seconds -->
+    <PREF NAME="Interval">10</PREF>
+  </GLOBAL>
+  <AUCTION ID="1" RESOURCE_ID="router2">
+    <ACTION NAME="libtwoauction" DEFAULT="true">
+    <PREF NAME="Bandwidth01" TYPE="Float32">6</PREF>
+    <PREF NAME="Bandwidth02" TYPE="Float32">6</PREF>
+    <PREF NAME="ReservePrice01" TYPE="Float64">0.3</PREF>
+    <PREF NAME="ReservePrice01" TYPE="Float64">0.6</PREF>
+    <PREF NAME="maxvalue01" TYPE="Float64">0.5</PREF>
+    <PREF NAME="maxvalue02" TYPE="Float64">1.0</PREF>
+    </ACTION>
+
+	<FIELD NAME="quantity">
+	<TEMPLATE_FIELD OBJECT_TYPE = "BID" TEMPLATE_TYPE = "DATA"></TEMPLATE_FIELD>
+	<TEMPLATE_FIELD OBJECT_TYPE = "ALLOCATION" TEMPLATE_TYPE = "DATA"></TEMPLATE_FIELD>
+	</FIELD>
+
+	<FIELD NAME="unitbudget">
+	<TEMPLATE_FIELD OBJECT_TYPE = "BID" TEMPLATE_TYPE = "DATA"></TEMPLATE_FIELD>
+	</FIELD>
+    
+	<FIELD NAME="unitprice">
+	<TEMPLATE_FIELD OBJECT_TYPE = "ALLOCATION" TEMPLATE_TYPE = "DATA"></TEMPLATE_FIELD>
+	</FIELD>
+
+	<FIELD NAME="maxvalue">
+	<TEMPLATE_FIELD OBJECT_TYPE = "BID" TEMPLATE_TYPE = "DATA"></TEMPLATE_FIELD>
+	</FIELD>
+
+  </AUCTION>
+</AUCTIONSET>
