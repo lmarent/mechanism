@@ -212,24 +212,6 @@ void auction::initModule( auction::configParam_t *params )
 	cout <<  "two auction module: start init module" << endl;
 	int numparams = 0;
 	
-    while (params[0].name != NULL) {
-		// in all the application we receive the next allocation id to create
-		
-		cout << "Param:" << params[0].name << endl;
-		
-        if (caseInsensitiveStringCompare(params[0].name, "nextid")) {
-            lastId = parseUInt32( params[0].value );
-			numparams++;
-#ifdef DEBUG
-		fprintf( stdout, "two auction module: nextId: [ %"PRIu32" ] \n", lastId );
-#endif
-        }
-        params++;
-    }
-
-	 if ( numparams != MOD_INIT_REQUIRED_PARAMS )
-		 throw ProcError("two auction init module - not enought parameters");
-
 	// Bring fields defined for ipap_messages;
 	g_ipap_fields.initialize_forward();
     g_ipap_fields.initialize_reverse();
