@@ -183,7 +183,7 @@ void auction::execute (auction::fieldDefList_t *fieldDefs, auction::fieldValList
 
 void auction::execute_user( auction::fieldDefList_t *fieldDefs, auction::fieldValList_t *fieldVals, 
 							auction::fieldList_t *requestparams, auction::auctionDB_t *auctions, 
-							auction::biddingObjectDB_t **biddata )
+							time_t start, time_t stop,  auction::biddingObjectDB_t **biddata )
 {
 
 #ifdef DEBUG
@@ -194,7 +194,6 @@ void auction::execute_user( auction::fieldDefList_t *fieldDefs, auction::fieldVa
 	double budget, valuation;
 	double budgetByAuction, valuationByAuction;
 	float quantity;
-	time_t start, stop;
 	
 	int check_ret = check(fieldDefs, requestparams);
 	
@@ -213,8 +212,6 @@ void auction::execute_user( auction::fieldDefList_t *fieldDefs, auction::fieldVa
 	   // start and stop time come from the auction, because they are replaced by the
 	   // interval definition.
 	   auctionDBIter_t firstAuct = auctions->begin();
-	   start = (*firstAuct)->getStart();
-	   stop = (*firstAuct)->getStop();
 		
 	   budgetByAuction = budget; ;
 	   valuationByAuction = valuation;
