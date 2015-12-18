@@ -207,9 +207,14 @@ void twoauctionuser_Test::test()
 		fields.push_back(field2);
 		fields.push_back(field3);
 		
+		time_t start = time(NULL);
+		time_t end = start + 10;
+		
 		procmod->getAPI()->execute_user(auctionManagerPtr->getFieldDefs(),
 										auctionManagerPtr->getFieldVals(),
-										&fields, auctions, &ptr );
+										&fields, auctions, 
+										start, end,
+										&ptr );
 		
 		biddingObjectDBIter_t iter2;
 		for (iter2 = ptr->begin(); iter2 != ptr->end(); iter2++){

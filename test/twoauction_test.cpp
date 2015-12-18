@@ -62,7 +62,7 @@ void twoauction_Test::setUp()
 		string filename;
 		biddingObjectDB_t *new_bids = NULL;
 		bids = new biddingObjectDB_t();
-		moduleName = "libtwoauction";
+		moduleName = "libtwoauction.so";
 		
 		BiddingObject *ptrBid;
 		
