@@ -714,21 +714,22 @@ void auction::execute( auction::fieldDefList_t *fieldDefs, auction::fieldValList
 	int nl = calculateRequestedQuantities(bids_low);
 	int nh = calculateRequestedQuantities(bids_high);
 	
-	// Find the probability of changing from the high budget to low budget auction.
-	TwoAuctionMechanism *mechanism = new TwoAuctionMechanism();
-	double a = 0.01;
-	double b = 0.5;
-	double macheps = 0.000001;
-	double t = 0.000001;
-	double bidF = 0.6;
-	double qStar = mechanism->zerosWithUnits(nh, nl, bh, bl, bandwidth_to_sell_high, 
-								  bandwidth_to_sell_low, reserve_price_high, 
-								  reserve_price_low, bidF, a, b, macheps, t);
+	double qStar = 0;
+	if ((nl > 0) && (nh > 0)){ 
 	
-	delete mechanism;
-	
-	
-	qStar = 0;
+		// Find the probability of changing from the high budget to low budget auction.
+		TwoAuctionMechanism *mechanism = new TwoAuctionMechanism();
+		double a = 0.01;
+		double b = 0.5;
+		double macheps = 0.000001;
+		double t = 0.000001;
+		double bidF = 0.6;
+		qStar = mechanism->zerosWithUnits(nh, nl, bh, bl, bandwidth_to_sell_high, 
+									  bandwidth_to_sell_low, reserve_price_high, 
+									  reserve_price_low, bidF, a, b, macheps, t);
+		
+		delete mechanism;
+	}
 	
 	// Execute auctions.
 	map<string,auction::BiddingObject *> alloctions_low;
@@ -743,8 +744,10 @@ void auction::execute( auction::fieldDefList_t *fieldDefs, auction::fieldValList
 	
 	cout << "after executeAuction high budget users" << endl;
 	
-	// change bids from the high budget to low budget auction.
-	ApplyMechanism( fieldDefs, fieldVals, start, stop, alloctions_high, price_low, qStar);
+	if (qStar > 0){
+		// change bids from the high budget to low budget auction.
+		ApplyMechanism( fieldDefs, fieldVals, start, stop, alloctions_high, price_low, qStar);
+	}
 		
 	// Convert from the map to the final allocationDB result
 	map<string,auction::BiddingObject *>::iterator alloc_iter;
