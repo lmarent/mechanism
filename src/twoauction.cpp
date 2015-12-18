@@ -564,57 +564,58 @@ double executeAuction(auction::fieldDefList_t *fieldDefs, auction::fieldValList_
 	cout << "two auction module- qty available:" << qtyAvailable << endl;
 #endif
 	
-	std::multimap<double, alloc_proc_t>::iterator it = orderedBids.end();
-	do
-	{ 
-	    --it;
-                
-        if ( qtyAvailable < (it->second).quantity){
-			(it->second).quantity = qtyAvailable;
-			if (qtyAvailable > 0){
-				sellPrice = it->first; 
-				qtyAvailable = 0;
-			 }
-		}
-		else{
-			qtyAvailable = qtyAvailable - (it->second).quantity;
-			sellPrice = it->first;
-		}
-		
-	} while (it != orderedBids.begin());
+	if ( orderedBids.size() > 0 ){
+		std::multimap<double, alloc_proc_t>::iterator it = orderedBids.end();
+		do
+		{ 
+			--it;
+					
+			if ( qtyAvailable < (it->second).quantity){
+				(it->second).quantity = qtyAvailable;
+				if (qtyAvailable > 0){
+					sellPrice = it->first; 
+					qtyAvailable = 0;
+				 }
+			}
+			else{
+				qtyAvailable = qtyAvailable - (it->second).quantity;
+				sellPrice = it->first;
+			}
+			
+		} while (it != orderedBids.begin());
 
 #ifdef DEBUG	
 	cout << "two auction module: after executing the auction" << (int) bids->size() << endl;
 #endif
 	
-	map<string,auction::BiddingObject *>::iterator alloc_iter;
-	
-	// Creates allocations
-	it = orderedBids.end();
-	do
-	{
-	    --it;
-	    
-		if (allocations.find(makeKey(aset, 
-			aname,(it->second).bidSet, (it->second).bidName )) != allocations.end()){
-			alloc_iter = allocations.find(makeKey(aset, aname,
-								(it->second).bidSet, (it->second).bidName ));
-			addQuantityAllocation(fieldVals, alloc_iter->second, (it->second).quantity); 					
-		}
-		else{
-			auction::BiddingObject *alloc = 
-				createAllocation(fieldDefs, fieldVals, aset, aname, 
-								  (it->second).bidSet, (it->second).bidName, (it->second).sessionId,
-								    start, stop, (it->second).quantity, sellPrice);
-									
-			allocations[makeKey(aset, aname,
-								(it->second).bidSet, (it->second).bidName)] = alloc;
-		}
-	    
-	} while (it != orderedBids.begin());
-
+		map<string,auction::BiddingObject *>::iterator alloc_iter;
+		
+		// Creates allocations
+		it = orderedBids.end();
+		do
+		{
+			--it;
+			
+			if (allocations.find(makeKey(aset, 
+				aname,(it->second).bidSet, (it->second).bidName )) != allocations.end()){
+				alloc_iter = allocations.find(makeKey(aset, aname,
+									(it->second).bidSet, (it->second).bidName ));
+				addQuantityAllocation(fieldVals, alloc_iter->second, (it->second).quantity); 					
+			}
+			else{
+				auction::BiddingObject *alloc = 
+					createAllocation(fieldDefs, fieldVals, aset, aname, 
+									  (it->second).bidSet, (it->second).bidName, (it->second).sessionId,
+										start, stop, (it->second).quantity, sellPrice);
+										
+				allocations[makeKey(aset, aname,
+									(it->second).bidSet, (it->second).bidName)] = alloc;
+			}
+			
+		} while (it != orderedBids.begin());
+	}
 #ifdef DEBUG	
-	cout << "two auction module: after create allocations" << (int) bids->size() << endl;
+	cout << "two auction module: after create allocations" << (int) allocations.size() << endl;
 #endif
 
 	return sellPrice;
