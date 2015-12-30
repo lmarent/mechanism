@@ -4,7 +4,7 @@
   <BIDDING_OBJECT AUCTION_ID = "1.1" ID= "Bid1" TYPE="BID"> 
     <ELEMENT ID="element1">
 		<FIELD NAME="quantity">4</FIELD>
-		<FIELD NAME="unitprice">0.3</FIELD>
+		<FIELD NAME="unitprice">0.49</FIELD>
     </ELEMENT>
 
     <OPTION ID="General1.1">

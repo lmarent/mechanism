@@ -18,7 +18,7 @@ pkgincludedir = $(includedir)/$(PACKAGE)
 API_INC		= $(top_srcdir)/include
 INC_DIR 	= $(top_srcdir)/include
 
-lib_LTLIBRARIES = libtwoauction.la libtwoauctionuser.la
+lib_LTLIBRARIES = libtwoauction.la libtwoauctionuser.la libsubsidyauction.la libsubsidyauctionuser.la
 
 if ENABLE_DEBUG
 AM_CXXFLAGS = -I$(top_srcdir)/include $(LIBIPAP_CFLAGS) $(LIBAUCTIONFDTION_CFLAGS) \
@@ -43,6 +43,22 @@ libtwoauctionuser_la_CPPFLAGS = $(LIBIPAP_CFLAGS) $(LIBAUCTIONFDTION_CFLAGS) \
 libtwoauctionuser_la_SOURCES = twoauctionuser.cpp
 
 libtwoauctionuser_la_LIBADD = MiscProcModule.lo ProcError.lo $(LIBIPAP_LIBS)
+
+
+libsubsidyauction_la_CPPFLAGS = $(LIBIPAP_CFLAGS) $(LIBAUCTIONFDTION_CFLAGS) \
+								$(LIBANSLP_MSG_CFLAGS) $(PQXX_CFLAGS)
+
+libsubsidyauction_la_SOURCES = subsidyauction.cpp
+
+libsubsidyauction_la_LIBADD = MiscProcModule.lo ProcError.lo $(LIBIPAP_LIBS)
+
+
+libsubsidyauctionuser_la_CPPFLAGS = $(LIBIPAP_CFLAGS) $(LIBAUCTIONFDTION_CFLAGS) \
+									$(LIBANSLP_MSG_CFLAGS) $(PQXX_CFLAGS)
+
+libsubsidyauctionuser_la_SOURCES = subsidyauctionuser.cpp
+
+libsubsidyauctionuser_la_LIBADD = MiscProcModule.lo ProcError.lo $(LIBIPAP_LIBS)
 
 
 LDADD = $(LIBIPAP_LIBS) $(PQXX_LIBS) $(LIBAUCTIONFDTION_LIBS)

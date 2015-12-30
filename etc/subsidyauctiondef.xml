@@ -13,12 +13,13 @@
   </GLOBAL>
   <AUCTION ID="1" RESOURCE_ID="router2">
     <ACTION NAME="libtwoauction" DEFAULT="true">
-    <PREF NAME="Bandwidth01" TYPE="Float32">6</PREF>
-    <PREF NAME="Bandwidth02" TYPE="Float32">6</PREF>
-    <PREF NAME="ReservePrice01" TYPE="Float64">0.3</PREF>
-    <PREF NAME="ReservePrice01" TYPE="Float64">0.6</PREF>
+    <PREF NAME="reserveprice" TYPE="Float64">0.6</PREF>
+    <!-- Discriminating Bid value -->
     <PREF NAME="maxvalue01" TYPE="Float64">0.5</PREF>
-    <PREF NAME="maxvalue02" TYPE="Float64">1.0</PREF>
+    <!-- Subsidy given - in this case 20% -->
+    <PREF NAME="subsidy" TYPE="Float32">1.2</PREF>
+    <!-- Total bandwidth  -->
+	<PREF NAME="bandwidth" TYPE="Float32">12</PREF>
     </ACTION>
 
 	<FIELD NAME="quantity">

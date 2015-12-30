@@ -51,6 +51,7 @@ typedef struct
 	string elementName;
 	string sessionId;
 	double quantity;
+	double originalPrice; 
 	double sellPrice;
 } alloc_proc_t;
 

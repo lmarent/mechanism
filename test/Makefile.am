@@ -8,6 +8,8 @@ test_runner_SOURCES =  @top_srcdir@/src/TwoAuctionMechanism.cpp \
 					   @top_srcdir@/test/TwoAuctionMechanism_test.cpp \
 					   @top_srcdir@/test/twoauction_test.cpp \
 					   @top_srcdir@/test/twoauctionuser_test.cpp \
+					   @top_srcdir@/test/subsidyauction_test.cpp \
+					   @top_srcdir@/test/subsidyauctionuser_test.cpp \
 					   @top_srcdir@/test/test_runner.cpp
 
 test_runner_CPPFLAGS  = -I$(API_INC) $(CPPUNIT_CFLAGS) \
