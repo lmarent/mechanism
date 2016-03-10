@@ -66,12 +66,29 @@ class TwoAuctionMechanism {
 	double calculateFi(int i, int p);
 
     /*!
+     * \short   Calculates Function FiPrime(i,p) Defined as:
+     * 			  f_iprime(i,p) = ((p)!)^{2} / (p+i)! * (p+1-i)!
+
+        \arg \c i          i element.
+        \arg \c p          p number total of elements.
+    */
+	double calculateFiPrime(int p, int i);
+
+    /*!
      * \short   Calculates Function G(p) Defined as:
      * 			  G(p) = ((p+1)!)^{2} / (2p+3)!
 
         \arg \c p          p number total of elements.
     */
 	double calculateG( int p );
+	
+	/*!
+     * \short   Calculates Function GPrime(p) Defined as:
+     * 			  G(p) = (p!)^{2} / (2p+1)!
+
+        \arg \c p          p number total of elements.
+    */
+	double calculateGPrime( int p );
 
     /*!
      * \short   Calculates Function I(p) between [0,b] defined as:
@@ -81,7 +98,20 @@ class TwoAuctionMechanism {
         \arg \c b 		Maximum value that the independent variable y might take
     */
 	double calculateUniformI(int p, double b);
+	
+	
+	double calculateUniformIPrime(int p, double b, double c);
 
+    /*!
+     * \short   Calculates Function E(p,b,c) between [b,c] defined as:
+     * 			  E(p,b,c) = \int_{b}_{c} y^{k} (2-y)^{k} dy
+     * 			  	   	   
+
+        \arg \c b  Minimum value for budget random variable.
+        \arg \c c  Upper limit for the integration.
+    */
+	double calculateE(int p, double b, double c);
+	
     /*!
      * \short   Calculates Function I(p) between [0,y] defined as:
      * 			  I(p) = \int_{0}_{y} (y(b + 1 -y)/b)^p f(y) dy
@@ -105,6 +135,53 @@ class TwoAuctionMechanism {
 
 
     /*!
+     * \short   Calculates the Funtion P(p, b, c) defined as:
+     * 
+     * 	 y * F(y)^{p+1} , where F(y) = (2y -b -y^2) / 1-b, if c > b
+     * 							F(y) = y 				 , if c <= b	
+
+        \arg   \c val	value
+        	   \c p 	exponent
+
+    */
+	double FunctionP(int p, double b, double c);
+	
+    /*!
+     * \short   Calculates the Funtion O(p,val) defined as (val^{p})/ps
+
+        \arg   \c val	value
+        	   \c p 	exponent
+
+    */
+	double FunctionO(int p, double val);
+	
+    /*!
+     * \short   Calculates Function Q defined as 
+     * 
+     * 		Q = sum_{k=1}^{p} ( C(p,k) (-b)^{p-k}E(k,b,c)
+
+        \arg   \c p		Number of elements to include.
+        	   \c b 	Lower integration limit.
+        	   \c c		Maximum integration limit.
+
+    */
+	double FunctionQ(int p, double b, double c);
+	
+	
+    /*!
+     * \short   Calculates Function V defined as 
+     * 
+     * 		V = Q(p,b,c) / (1-b)^{p}
+
+        \arg   \c p		Number of elements to include.
+        	   \c b 	Lower integration limit.
+        	   \c c		Maximum integration limit.
+
+    */
+	double FunctionV(int p, double b, double c);
+	
+	
+    /*!
      * \short   Calculates the Function D(n,k,j) defined as:
      * 			  D(n,k,j) = n*C^{n-k}_{j}*C^{n-1}_{k-1}
 
@@ -112,8 +189,8 @@ class TwoAuctionMechanism {
         	   \c k 	Number of object to subtract from n
         	   \c j		Nuber of elements of choose fron n-k.
 
-    */
-	double calculateD(int n, int k, int j);
+    */   
+	double calculateD(double init, int n, int k, int j);
 
     /*!
      * \short   Calculates the expected value of the k order statistic
@@ -126,9 +203,26 @@ class TwoAuctionMechanism {
         	   \c j		iterator over the number of users that stay in the auction.
 
     */
-	double calculateExpectedValueK(int n, int k, double b,
-									std::map<int,double> &Dvalues);
-
+	double calculateExpectedValueK(int n, int k, double b);
+	
+	
+	double FunctionFy(double c, double b);
+	double Functiongy(double b, double c);
+	double functiongDerivate(double b);
+	double FunctionY0(int p, double b, double c);
+	double Derivate1y(int p, double b, double c);
+	double Derivate2y(int p, double b, double c);
+	double Derivate3y(int p, double b, double c);
+	double Derivate4y(int p, double b, double c);
+	double Derivate5y(int p, double b, double c);
+	double Derivate6y(int p, double b, double c);
+	double calculateStep(int p, double b, double c, double tolerance);
+	void CalculateEvaluationPointsNumericalV(int p, double b, double start, 
+						double end, double tolerance, set<double> *points);
+	
+	double AproximateV(int p, double b, double middle, double value);
+	double CalculateNumericalV(int p, double b, double c, double tolerance);
+	
     /*!
      * \short   Calculates the expected value conditioned on a particular bid
      * 			of the k order statistic of a sample with n random variables IID is defined by:
@@ -144,6 +238,22 @@ class TwoAuctionMechanism {
 											std::map<int,double> &Dvalues);
 
     /*!
+     * \short   Calculates the expected value conditioned on a particular bid
+     * 			of the k order statistic of a sample with n random variables IID, 
+     * 			corresponding to for high budget users, it is defined by:
+     *
+     * 		E[Z_{n}^{k}(y)] = \sum_{j=0}^{n-k} (-1)^{j}*D(n,k,j)*I(k+j-1, y)
+
+        \arg   \c n		Total number of users.
+        	   \c k 	Number of objects to assign
+        	   \c b		maximum value for low budget users
+        	   \c bid   reference bid. 
+
+    */
+	double calculateExpectedBoundedValueKPrime(int n, int k, double b, double bid);
+
+
+    /*!
      * \short   Calculates the conditioned probability of winning with a particular bid
      * 			of the k order statistic of a sample with n random variables IID is defined by:
      *
@@ -153,9 +263,25 @@ class TwoAuctionMechanism {
         	   \c k 	Number of objects to assign
         	   \c j		iterator over the number of users that stay in the auction.
 
-    */
+    */    
 	double calculateWinProbability(int n, int k, double b, double bid,
 									std::map<int,double> &Dvalues);
+
+
+    /*!
+     * \short   Calculates the conditioned probability of winning with a particular bid
+     * 			of the k order statistic of a sample with n random variables IID for the
+     * 			high budget users, it is defined as:
+     *
+     * 		P[Z_{n}^{k}(y)<= c] =  F(y)^{k} \sum_{j=0}^{n-k} C(k+j-1,k-1)(1-F(c))^{j}
+
+        \arg   \c n		Total number of users.
+        	   \c k 	Number of objects to assign
+        	   \c j		iterator over the number of users that stay in the auction.
+
+    */    
+	double calculateWinProbabilityPrime(int n, int k, double b, double bid);
+
 
     /*!
      * \short   Calculates the expected payoff when a user choose to stay
@@ -174,12 +300,13 @@ class TwoAuctionMechanism {
      *
 		\arg   \c n		Total number of users.
 		\arg   \c k		Total number of units to auction.
-		\arg   \c b 	Maximum value that a user can pay for any unit
+		\arg   \c bh 	Maximum value that a high budget user can pay for any unit
+		\arg   \c bl 	Maximum value that a low budget user can pay for any unit
 		\arg   \c rph 	reserved price to pay.
 		\arg   \c bid   Proposed bid from the user.
 		\arg   \c q 	Probability that a user decides to compete in the low budget auction.
     */
-	double expectedProfitHStrategyWithUnits(int n, int k, double b, double rp, double bid, double q);
+	double expectedProfitHStrategyWithUnits(int nh, int kh, double bh, double bl, double rp, double bid, double q);
 
     /*!
      * \short   Calculates the expected payoff when a high budget user

@@ -255,6 +255,7 @@ AC_SUBST(DEF_BINDIR)
 AC_SUBST(DOXY)
 
 AC_CONFIG_FILES([Makefile \
+			     etc/Makefile \
 				 src/Makefile \
 				 test/Makefile  ] )
 

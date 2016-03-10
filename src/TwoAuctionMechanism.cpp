@@ -74,6 +74,37 @@ double TwoAuctionMechanism::calculateFi(int i, int p)
 	return val_return;
 }
 
+
+double TwoAuctionMechanism::calculateFiPrime(int p, int i)
+{
+	// we check that the number i be in the interval [1,p]
+	
+	if ((i < 1) || (i > p)){
+		throw Error("Given parameter i must be in the interval [1,p]");
+	}
+	
+	double val_return = 0;
+	double one = 1.0;
+	
+	if (i == 1){
+		val_return = (one / (p + 1));
+	}
+	else { 
+		val_return = (one / (p + 1));
+		double num = p;
+		double dem = p + 2;
+		
+		for (int index = 2; index <= i; ++index)
+		{
+			val_return = val_return * (num / dem );
+			num = num - 1;
+			dem = dem + 1;
+		} 
+	}
+	
+	return val_return;
+}
+
 double TwoAuctionMechanism::calculateG( int p )
 {
 	double val_return = 0;
@@ -83,7 +114,17 @@ double TwoAuctionMechanism::calculateG( int p )
 	return val_return;
 }
 
-double TwoAuctionMechanism::calculateUniformI(int p, double b)
+double TwoAuctionMechanism::calculateGPrime( int p )
+{
+	double val_return = 0;
+	val_return = calculateFiPrime(p, p);
+	val_return = (val_return / ( (2*p) + 1));
+	
+	return val_return;
+}
+
+double 
+TwoAuctionMechanism::calculateUniformI(int p, double b)
 {
 	
 	// Verify that parameters are in the correct domain.
@@ -114,6 +155,431 @@ double TwoAuctionMechanism::calculateUniformI(int p, double b)
 	valI = valI / (p+1);
 	
 	return valI;
+}
+
+double 
+TwoAuctionMechanism::calculateE(int p, double b, double c)
+{
+	// Verify that parameters are in the correct domain.
+	
+	if ( p < 0 ){
+		throw Error("Given parameter p must be greater or equal to zero");
+	}
+	
+	if ((b > 1) || (b < 0)){
+		throw Error("Given parameter b must be in range [0,1]");
+	}
+
+	if ((c > 1) || (c < 0)){
+		throw Error("Given parameter c must be in range [0,1]");
+	}
+	
+	double valE = 0;
+	
+	for (int index = 1; index <= p; index++ )
+	{
+		double fiprime = calculateFiPrime(p, index);
+		int index2 = p + index;
+		int index3 = p - index + 1;
+		double tempUpper = pow(c, index2) * pow(2-c,index3);
+		double tempLower = pow(b, index2) * pow(2-b,index3);
+				
+		valE = valE + fiprime*(tempUpper-tempLower);
+	}
+	
+	int index4 = (2*p) + 1;
+	double gp = calculateGPrime(p) * ( pow(c, index4) - pow(b, index4));
+	
+	valE = valE + gp;
+					
+	return valE;
+}
+
+double TwoAuctionMechanism::FunctionP(int p, double b, double c)
+{
+	double Fy = 0.0;
+	double valReturn = 0.0;
+		
+	if (c > b){
+		Fy = (2*c) - b - pow(c,2);
+		Fy = Fy /(1-b);
+	} else {
+		Fy = c;
+	}
+	
+	valReturn = pow(Fy,p+1);
+	valReturn = valReturn * c;
+	
+	return valReturn;
+}
+
+double TwoAuctionMechanism::FunctionO(int p, double val)
+{
+	double val_return = 0;
+
+	if ( p < 0 ){
+		throw Error("Given parameter p must be greater or equal to zero");
+	}
+	
+	if ((val > 1) || (val < 0)){
+		throw Error("Given parameter val must be in range [0,1]");
+	}
+
+	val_return = pow ( val, p); 
+	val_return = val_return / p;
+	
+	return val_return;
+}
+
+double TwoAuctionMechanism::FunctionFy(double b, double c)
+{
+	double Fy = (2*c) - b - pow(c,2);
+	Fy = Fy /(1-b);
+	
+	return Fy;
+	
+}
+
+double TwoAuctionMechanism::Functiongy(double b, double c)
+{
+	double val_return = (2-(2*c));
+	val_return = val_return /(1-b);
+	return val_return;
+}
+
+double TwoAuctionMechanism::functiongDerivate(double b)
+{
+	double val_return = -2.0 / (1-b);
+	return val_return;
+} 
+
+double TwoAuctionMechanism::FunctionY0(int p, double b, double c)
+{
+	double val_return = pow(FunctionFy(b, c), p+1);
+	
+	return val_return;
+}
+
+double TwoAuctionMechanism::Derivate1y(int p, double b, double c)
+{
+	return (p+1)*pow(FunctionFy(b,c), p) * Functiongy(b,c);
+
+}
+
+double TwoAuctionMechanism::Derivate2y(int p, double b, double c)
+{
+	double val1 = (p+1);
+	val1 = val1 * pow(FunctionFy(b,c), p-1);
+	val1 = val1 * p;
+	val1 = val1 * pow(Functiongy(b,c), 2);
+	
+	double val2 = (p+1);
+	val2 = val2 * pow(FunctionFy(b,c), p);
+	val2 = val2 * functiongDerivate(b);
+	
+	return val1 + val2;
+}
+
+double TwoAuctionMechanism::Derivate3y(int p, double b, double c)
+{
+	double val1 = (p+1);
+	val1 = val1 * pow(FunctionFy(b,c), p-2);
+	val1 = val1 * p;
+	val1 = val1 * pow(Functiongy(b,c), 3);
+	val1 = val1 * (p-1);
+	
+	double val2 = 3*(p+1);
+	val2 = val2 * pow(FunctionFy(b,c), p-1);
+	val2 = val2 * p;
+	val2 = val2 * Functiongy(b,c);
+	val2 = val2 * functiongDerivate(b);
+	
+	return val1 + val2;
+}
+
+double TwoAuctionMechanism::Derivate4y(int p, double b, double c)
+{
+    double val1 = (p+1)*p;
+    val1 = val1 * pow(FunctionFy(b,c), p-3);
+    val1 = val1 * (p-1);
+    val1 = val1 * pow(Functiongy(b,c), 4);
+    val1 = val1 * (p-2);
+    
+    double val2 = 6*(p+1);
+    val2 = val2 * pow(FunctionFy(b,c), p-2);
+    val2 = val2 * p; 
+	val2 = val2 * pow(Functiongy(b,c), 2);
+	val2 = val2 * (p-1);
+	val2 = val2 * functiongDerivate(b);
+	
+	double val3 = 3*(p+1);
+	val3 = val3 * pow(FunctionFy(b,c), p-1);
+	val3 = val3 * p;
+	val3 = val3 * pow(functiongDerivate(b),2);
+    
+    return val1 + val2 + val3;
+}
+
+double TwoAuctionMechanism::Derivate5y(int p, double b, double c)
+{
+
+    double val1 = (p+1)*(p);
+    val1 = val1 * pow(FunctionFy(b,c), p-4);
+    val1 = val1 * (p-1);
+    val1 = val1 * pow(Functiongy(b,c), 5);
+    val1 = val1 * (p-2)*(p-3);
+    
+    double val2 = 10*(p+1)*(p);
+    val2 = val2 * pow(FunctionFy(b,c), p-3);
+    val2 = val2 * (p-1);
+	val2 = val2 * pow(Functiongy(b,c), 3);
+	val2 = val2 * (p-2);
+	val2 = val2 * functiongDerivate(b);
+	
+	double val3 = 15*(p+1);
+	val3 = val3 * pow(FunctionFy(b,c), p-2);
+	val3 = val3 * p;
+	val3 = val3 * Functiongy(b,c);
+	val3 = val3 * (p-1);
+	val3 = val3 * pow(functiongDerivate(b),2);
+    
+    return val1 + val2 + val3;
+
+}
+
+double TwoAuctionMechanism::Derivate6y(int p, double b, double c)
+{
+    double val1 = (p+1)*(p);
+    val1 = val1 * pow(FunctionFy(b,c), p-5);
+    val1 = val1 *(p-1)*(p-2);
+    val1 = val1 * pow(Functiongy(b,c), 6);
+    val1 = val1 *(p-3)*(p-4);
+    
+    double val2 = 15*(p+1)*(p);
+    val2 = val2 * pow(FunctionFy(b,c), p-4);
+    val2 = val2 *(p-1)*(p-2);
+	val2 = val2 * pow(Functiongy(b,c), 4);
+	val2 = val2 * (p-3);
+	val2 = val2 * functiongDerivate(b);
+	
+	double val3 = 45*(p+1)*(p);
+	val3 = val3 * pow(FunctionFy(b,c), p-3);
+	val3 = val3 * (p-1);
+	val3 = val3 * pow(Functiongy(b,c), 2);
+	val3 = val3 * (p-2);
+	val3 = val3 * pow(functiongDerivate(b),2);
+
+	double val4 = 15*(p+1)*(p);
+	val4 = val4 * pow(FunctionFy(b,c), p-2);
+	val4 = val4 * (p-1);
+	val4 = val4 * pow(functiongDerivate(b),3);
+    
+    return val1 + val2 + val3 + val4;
+
+}
+
+double TwoAuctionMechanism::calculateStep(int p, double b, double c, double tolerance)
+{
+	double nplusone = 7.0;
+	double val = Derivate6y(p,b,c);
+	double fact6 = 720.0;
+	val = abs(val);
+	val = (fact6 * nplusone) / val;
+	val = val * tolerance;
+	val = pow( val, 1.0 / nplusone );
+	
+	return val;
+}
+
+void 
+TwoAuctionMechanism::CalculateEvaluationPointsNumericalV(int p, double b, double start, 
+						double end, double tolerance, set<double> *points)
+{
+	
+	double center = (start + end) / 2.0;
+	double h = calculateStep(p, b, center, tolerance);
+	
+	// cout << "center:" << center << "h:" << h << endl;
+	
+	if ((center - h) < start ){
+		points->insert(end);
+		points->insert(start);
+	} else { 
+		// we have to divide the interval, because h is small.
+		double startInt = center - h;
+		double endInt = center + h;
+		points->insert(startInt);
+		points->insert(endInt);
+		CalculateEvaluationPointsNumericalV(p,b,start, startInt, tolerance, points);
+		CalculateEvaluationPointsNumericalV(p,b,endInt, end, tolerance, points);
+	}	
+}
+
+double TwoAuctionMechanism::AproximateV(int p, double b, double middle, double value)
+{
+	double val0 = FunctionY0(p, b, middle);
+	val0 = val0 / 1.0;
+	val0 = val0 * (value - middle);
+	
+	double val1 = Derivate1y(p, b, middle);
+	val1 = val1 / 2.0;
+	val1 = val1 * pow((value - middle),2.0);
+	
+	double val2 = Derivate2y(p, b, middle);
+	val2 = val2 / 6.0;
+	val2 = val2 * pow(value - middle, 3.0);
+
+	double val3 = Derivate3y(p, b, middle);
+	val3 = val3 / 24.0;
+	val3 = val3 * pow(value - middle, 4.0);
+
+	double val4 = Derivate4y(p, b, middle);
+	val4 = val4 / 120.0;
+	val4 = val4 * pow(value - middle, 5.0);
+
+	double val5 = Derivate5y(p, b, middle);
+	val5 = val5 / 720.0;
+	val5 = val5 * pow(value - middle, 6.0);
+
+	double val6 = Derivate6y(p, b, middle);
+	val6 = val6 / 5040.0;
+	val6 = val6 * pow(value - middle, 7.0);
+
+	return val0 + val1 + val2 + val3 + val4 + val5 + val6;
+}
+
+double TwoAuctionMechanism::CalculateNumericalV(int p, double b, double c, double tolerance)
+{
+	std::set<double> points;
+	std::set<double>::iterator it;
+	double start = 0;
+	double end = 0;
+	double val = 0;
+	
+	CalculateEvaluationPointsNumericalV(p, b, b, c, tolerance, &points);
+	
+	if (points.size() < 2){
+		throw Error("undetermined error");
+	} else {
+		it = points.begin();
+		start = *it;
+		it++;
+		end = *it;
+		for ( ; it != points.end(); ){	
+			// calculate the value for start and end.
+			double middle = (end + start)/ 2.0;
+			double valend = AproximateV(p, b, middle, end);
+			double valstart = AproximateV(p, b, middle, start);
+			val = val + valend - valstart;
+			
+			// cout << "start:" << start << ":val:" << valstart << ":end:" << end <<  ":val:" << valend << endl;
+			
+			start = end;
+			it++;
+			if ( it != points.end() ){
+				end = *it;
+			} else {
+				break;
+			}
+		}
+	}
+	
+	return val;
+}
+double TwoAuctionMechanism::FunctionQ(int p, double b, double c)
+{
+
+	if ( p < 0 ){
+		throw Error("Given parameter p must be greater or equal to zero");
+	}
+	
+	if ((b > 1) || (b < 0)){
+		throw Error("Given parameter b must be in range [0,1]");
+	}
+
+	if ((c > 1) || (c < 0)){
+		throw Error("Given parameter c must be in range [0,1]");
+	}
+
+	if ( c < b ){
+		throw Error("Given parameter c must be less than b");
+	}
+	
+	double val_return = 0;
+	double negativeb = (b*-1) / (1-b);
+		
+	double valK0 = pow(negativeb,p)*(c-b);
+		
+	for ( int k=1; k<=p; k++){
+		
+		double valK = calculateE(k, b, c);		
+		
+		//cout << "K:" << k << ":b:" << b << ":c:" << c << ":E(k, b, c):" << valK << endl;
+		for (int i = 0; i < p-k; i++){
+			valK = valK * ((p-i)*(negativeb)) / (p-k-i);
+		}
+
+		// cout << "k:" << k << ":valK:" << valK << endl;
+
+		valK = valK / pow (1-b,k);
+		val_return = val_return + valK;
+		//cout << "k:" << k << ":valK:" << valK << ":ValReturn:" << val_return << endl;
+	}
+	
+	//cout << "val_return:" << val_return << "valK0:" << valK0 << endl;
+		
+	val_return = val_return + valK0;
+	
+	//cout << "val_return:" << val_return << endl;
+
+			
+	return val_return;
+}
+
+double TwoAuctionMechanism::FunctionV(int p, double b, double c)
+{	
+	double val_return = 0;
+	double tolerance =  0.00000001;
+	
+	if ( p >= 15 ) {
+		val_return = CalculateNumericalV(p, b, c, tolerance);
+	} else {	
+		val_return = FunctionQ(p, b, c);
+	}	
+	return  val_return;
+}
+
+double TwoAuctionMechanism::calculateUniformIPrime(int p, double b, double c)
+{
+	double valReturn = 0;
+
+	if ( p < 0 ){
+		throw Error("Given parameter p must be greater or equal to zero");
+	}
+	
+	if ((b > 1) || (b < 0)){
+		throw Error("Given parameter b must be in range [0,1]");
+	}
+
+	if ((c > 1) || (c < 0)){
+		throw Error("Given parameter c must be in range [0,1]");
+	}
+	
+	valReturn = FunctionP(p,b,c);
+		
+	if (c > b){
+
+		valReturn = valReturn - FunctionO(p+2,b);		
+		valReturn = valReturn - FunctionV(p+1,b,c);
+				
+	} else {
+				
+		valReturn = valReturn - FunctionO(p+2,c);
+	}	
+
+	valReturn = valReturn / (p+1);
+	
+	return valReturn;
 }
 
 double TwoAuctionMechanism::calculateUniformBoundedI(int p, double b, double y)
@@ -160,7 +626,7 @@ double TwoAuctionMechanism::calculateUniformBoundedI(int p, double b, double y)
 	return valI;
 }
 
-double TwoAuctionMechanism::calculateD(int n, int k, int j)
+double TwoAuctionMechanism::calculateD(double init, int n, int k, int j)
 {
 	
 	// Verify the parameters
@@ -184,7 +650,7 @@ double TwoAuctionMechanism::calculateD(int n, int k, int j)
 		throw Error("Given parameter j must be less than or equal to n-k");
 	}
 
-	double val_return = 1;
+	double val_return = init;
 	
 	int t = n-k-j+1;  // This is always greater or equal than zero.
 	
@@ -228,7 +694,7 @@ double TwoAuctionMechanism::calculateD(int n, int k, int j)
 	return val_return;
 }
 
-double TwoAuctionMechanism::calculateExpectedValueK(int n, int k, double b, std::map<int,double> &Dvalues)
+double TwoAuctionMechanism::calculateExpectedValueK(int n, int k, double b)
 {
 	//Verify the parameters given.
 	if (n <= 0){
@@ -253,17 +719,10 @@ double TwoAuctionMechanism::calculateExpectedValueK(int n, int k, double b, std:
 	for (int j=0; j <= (n-k); j++ ){
 		int p = 0;
 		double i_p = 0;
-		std::map<int,double>::iterator iter = Dvalues.find(j);
-		if ( iter != Dvalues.end() ){
-			p = k+j-1;
-			i_p = calculateUniformI(p,b);
-			expectedVal = expectedVal + ((iter->second)*i_p*pow(-1,j));
-		} else {
-			std::ostringstream o;
-			o << "Value D(n,k,j) = n*C^{n-k}_{j}*C^{n-1}_{k-1} was not calculated for index j:"; 
-			o << j;
-			throw Error(o.str());
-		}
+		p = k+j-1;
+		i_p = calculateUniformI(p,b);
+		i_p = calculateD(i_p, n, k, j);
+		expectedVal = expectedVal + i_p*pow(-1,j);
 		
 		//std::cout << "expected j:" << j << " p:" << p << " D:" << (iter->second) << " i_p:" << i_p << " val:" << expectedVal << std::endl;
 	}
@@ -304,25 +763,66 @@ double TwoAuctionMechanism::calculateExpectedBoundedValueK(int n, int k, double 
 
 	for (int j=0; j <= (n-k); j++ ){
 
-		std::map<int,double>::iterator iter = Dvalues.find(j);
-		if ( iter != Dvalues.end() ){
-			int p = k+j-1;
-			double i_p = calculateUniformBoundedI(p,b, bid);
-			double expectedVal = ((iter->second)*i_p*pow(-1,j));
-			//std::cout << "expectedVal:" << expectedVal << std::endl; 
-			acumExpectedVal = acumExpectedVal + expectedVal;
-		} else {
-			std::ostringstream o;
-			o << "Value D(n,k,j) = n*C^{n-k}_{j}*C^{n-1}_{k-1} was not calculated for index j:";
-			o << j;
-			throw Error(o.str());
-		}
+		int p = k+j-1;
+		double i_p = calculateUniformBoundedI(p,b, bid);
+		i_p = calculateD(i_p, n, k, j);
+		double expectedVal = i_p*pow(-1,j);
+		std::cout << "expectedVal:" << expectedVal << std::endl; 
+		acumExpectedVal = acumExpectedVal + expectedVal;
 	}
 	
 	//std::cout << "calculateExpectedBoundedValueK:" << " out:" << acumExpectedVal << std::endl; 
 	
 	return acumExpectedVal;
 }
+
+double 
+TwoAuctionMechanism::calculateExpectedBoundedValueKPrime(int n, int k, double b, double bid)
+{
+
+	std::cout << "calculateExpectedBoundedValueKPrime:" << " n:" << n << " k:" << k << " b:" << b << " bid:" << bid << std::endl; 
+	
+	//Verify the parameters given.
+	if (n <= 0){
+		throw Error("Given parameter n must be greater than zero");
+	}
+
+	if (k < 0){
+		throw Error("Given parameter k must be greater than or equal to zero");
+	}
+
+	if (k > n){
+		throw Error("Given parameter k:%d must be less than or equal to n:%d", k, n);
+	}
+
+	if ((b > 1) || (b < 0)){
+		throw Error("Given parameter b must be in range [0,1]");
+	}
+
+	if (bid < 0){
+		throw Error("Parameter bid must be greater than zero");
+	}
+
+	double acumExpectedVal = 0;
+
+	for (int j=0; j <= (n-k); j++ ){
+				
+		int p = k+j-1;
+		double q_p = calculateUniformIPrime(p, b, bid);
+		double expectedVal = calculateD(q_p, n, k, j);
+		expectedVal = expectedVal * pow(-1,j);
+		std::cout << "j:" << j << ":p:" << p << ":calculateIntegralPrime:" 
+				<< q_p << ":expectedVal:" << expectedVal << std::endl; 
+		
+		acumExpectedVal = acumExpectedVal + expectedVal;
+	}
+	
+	//std::cout << "calculateExpectedBoundedValueK:" << acumExpectedVal << std::endl; 
+	
+	return acumExpectedVal;
+	
+}
+
 
 double TwoAuctionMechanism::calculateWinProbability(int n, int k, double b, double bid, std::map<int,double> &Dvalues)
 {
@@ -332,17 +832,10 @@ double TwoAuctionMechanism::calculateWinProbability(int n, int k, double b, doub
 	double probabilityVal = 0;
 	for (int j=0; j <= (n-k); j++ ){
 
-		std::map<int,double>::iterator iter = Dvalues.find(j);
-		if ( iter != Dvalues.end() ){
-			double probi = (bid*(b+1-bid))/b;
-			probi = pow(probi,k+j) / (k+j);
-			probabilityVal = probabilityVal + ((iter->second)*probi*pow(-1,j));
-		} else {
-			std::ostringstream o;
-			o << "Value D(n,k,j) = n*C^{n-k}_{j}*C^{n-1}_{k-1} was not calculated for index j:";
-			o << j;
-			throw Error(o.str());
-		}
+		double probi = (bid*(b+1-bid))/b;
+		probi = pow(probi,k+j) / (k+j);
+		probi = calculateD(probi, n, k, j);
+		probabilityVal = probabilityVal + (probi*pow(-1,j));
 	}
 	
 	//std::cout << "output calculateWinProbability " << probabilityVal << std::endl;
@@ -350,7 +843,39 @@ double TwoAuctionMechanism::calculateWinProbability(int n, int k, double b, doub
 	return probabilityVal;
 }
 
+double TwoAuctionMechanism::calculateWinProbabilityPrime(int n, int k, double b, double bid)
+{
+	double Fy = 0.0;
+	double minusFy = 0.0;
+	double intern = 1.0;
+	double acum = 0.0; 
+	double valReturn = 0.0;
+		
+	if (bid > b){
+		Fy = (2*bid) - b - pow(bid,2);
+		Fy = Fy /(1-b);
+		minusFy = 1.0 - Fy;
+	} else {
+		Fy = bid;
+		minusFy = 1.0 - Fy;
+	}
+			
+	for (int j=0; j <= (n-k); j++ ){
+		intern = 1.0;
+		for ( int s = 1; s <= j; s++){
+			
+			double tmp = (k+s-1);
+			tmp = tmp / s;
+			intern = intern * tmp*(minusFy);
+		}
+				
+		acum = acum + intern;
+	}
+		
+	valReturn = acum * pow(Fy,k);
 
+	return valReturn;
+}
 
 long long TwoAuctionMechanism::C(int n, int r)
 {
@@ -379,24 +904,20 @@ double TwoAuctionMechanism::expectedProfitHStrategy(int n, double b, double bid,
 
 		std::map<int, double> Dvalues;
 
-		// Calculate the values D for j \in [NumPeople,NumPeople - Numobjects]
-		for (int j=0; j <= (numPeople - numPeople); j++ ){
-			Dvalues[j] = calculateD(numPeople,numPeople,j);
-		}
-
-		double winProb = calculateWinProbability(numPeople, numPeople, b, bid, Dvalues);
-		double expecVal = calculateExpectedBoundedValueK(numPeople, numPeople, b, bid,Dvalues);
+		double winProb = calculateWinProbabilityPrime(numPeople, numPeople, b, bid);
+		double expecVal = calculateExpectedBoundedValueKPrime(numPeople, numPeople, b, bid);
 		double initProb = pow(q,k)*pow(1-q,n-k)*C(n, std::min(k,n-k));
 		profit = initProb*winProb*bid - initProb*expecVal;
 		sumProfit = sumProfit + profit;
-		// std::cout << "K:" << k << " WinProb:" << winProb << "ExpecVal:" << expecVal << " initProb:" << initProb << " profit:" << profit << "sumProfit" << sumProfit << std::endl;
+		//std::cout << "K:" << k << ":WinProb:" << winProb << ":ExpecVal:" << 
+		//		expecVal << ":initProb:" << initProb << ":profit:" << profit << ":sumProfit" << sumProfit << std::endl;
 	}
 
 	return sumProfit;
 }
 
 double 
-TwoAuctionMechanism::expectedProfitHStrategyWithUnits(int nh, int kh, double bh, double rp, double bid, double q)
+TwoAuctionMechanism::expectedProfitHStrategyWithUnits(int nh, int kh, double bh, double bl, double rp, double bid, double q)
 {
 	
 	//std::cout << "expectedProfitHStrategyWithUnits nh:" << nh << " kh:" << kh << " bh:" << bh << std::endl;
@@ -417,15 +938,8 @@ TwoAuctionMechanism::expectedProfitHStrategyWithUnits(int nh, int kh, double bh,
 		} 
 		else {
 			
-			std::map<int, double> Dvalues;
-
-			// Calculate the values D for l \in [0,numPeople - kh]
-			for (int l=0; l <= kh; l++ ){
-				Dvalues[l] = calculateD(numPeople, numPeople - kh, l);
-			}
-
-			double winProb = calculateWinProbability(numPeople, numPeople - kh, bh, bid, Dvalues);
-			double expecVal = calculateExpectedBoundedValueK(numPeople, numPeople - kh, bh, bid, Dvalues);
+			double winProb = calculateWinProbabilityPrime(numPeople, numPeople - kh, bl, bid);
+			double expecVal = calculateExpectedBoundedValueKPrime(numPeople, numPeople - kh, bh, bid);
 			
 			//std::cout << "j:" << j << "WinProb:" << winProb << " ExpectedBoundedKValue:" << expecVal << std::endl;
 		
@@ -489,15 +1003,9 @@ TwoAuctionMechanism::expectedProfitLStrategyEnoughQuantities(int nh, int nl, int
 		// The auction should be executed.
 		
 		int orderk = nl-(kl-nh);
+				
+		return bid - calculateExpectedValueK(nl, orderk, bl);
 		
-		std::map<int,double> Dvalues;
-
-		// Calculate the values D for l \in [0, nl - orderk]
-		for (int l=0; l <= nl - orderk; l++ ){
-			Dvalues[l] = calculateD(nl, orderk, l);
-		}
-		
-		return bid - calculateExpectedValueK(nl, orderk, bl, Dvalues);
 	} else {
 		//Not enough users, all users pay the reserved price.
 		return bid - rpl;
@@ -560,7 +1068,7 @@ TwoAuctionMechanism::functionF(int nh, int nl, double bh, double bl, double bid,
 double
 TwoAuctionMechanism::functionFWithUnits(int nh, int nl, double bh, double bl, int kh, int kl, double rph, double rpl, double bid, double q)
 {
-	return expectedProfitHStrategyWithUnits(nh, kh, bh, rph, bid, q) - 
+	return expectedProfitHStrategyWithUnits(nh, kh, bh, bl, rph, bid, q) - 
 	       expectedProfitLStrategyWithUnits(nh, nl, bh, bl, kh, kl, rph, rpl, bid, q);
 }
 
