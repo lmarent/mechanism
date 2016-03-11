@@ -650,7 +650,7 @@ void createRequest(auction::biddingObjectDB_t * bids_low, auction::biddingObject
 			alloc2.elementName = elem_iter->first;
 			alloc2.sessionId = bid->getSession();
 			alloc2.quantity = unitsToPass;
-			alloc1.originalPrice = price;
+			alloc2.originalPrice = price;
 			allocBid.push_back(alloc2);
 			j =j + 1; 
 			
@@ -691,8 +691,14 @@ void executeAuctionRandomAllocation(auction::fieldDefList_t *fieldDefs, auction:
 	int index;
 	
 	// Create allocations for Bids that are below the reserved price.
-	for (size_t m = bidsToFulfil.size() - 1; m >= 0; m--){
-		for (size_t l = (bidsToFulfil[m]).size()-1; l >= 0; l--){
+	for (int m = bidsToFulfil.size() - 1; m >= 0; m--){
+		
+		cout << "execute Action random allocation 1" << endl;
+		
+		for (int l = (bidsToFulfil[m]).size()-1; l >= 0; l--){
+			
+			cout << "execute Action random allocation m:" << m << "l:" << l << endl;
+			
 			if ((bidsToFulfil[m][l]).originalPrice < price){
 				if ( allocations.find(makeKey(aset, aname,(bidsToFulfil[m][l]).bidSet, (bidsToFulfil[m][l]).bidName )) == allocations.end()) {
 					auction::BiddingObject *alloc = 
@@ -703,17 +709,21 @@ void executeAuctionRandomAllocation(auction::fieldDefList_t *fieldDefs, auction:
 					allocations[makeKey(aset, aname,
 									(bidsToFulfil[m][l]).bidSet, (bidsToFulfil[m][l]).bidName)] = alloc;
 				}
-
+				
+				cout << "execute Action random allocation 2 - item:" << l << " original price:" << (bidsToFulfil[m][l]).originalPrice << endl;
+				
 				// Remove the node.
-				(bidsToFulfil[m]).erase(bidsToFulfil[m].begin() + l);
+				bidsToFulfil[m].erase((bidsToFulfil[m]).begin() + l);
 			}
 		}
 		
+		cout << "execute Action random allocation 2" << endl;
 		// Remove the bid if all their price elements were less than the reserved price.
 		if ((bidsToFulfil[m]).size() == 0){
 			bidsToFulfil.erase(bidsToFulfil.begin() + m);
 		}	
 		
+		cout << "execute Action random allocation 3" << endl;
 	}
 	
 	// Allocates randomly the available quantities
