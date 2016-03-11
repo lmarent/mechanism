@@ -25,13 +25,15 @@ class twoauctiongeneralized_Test : public CppUnit::TestFixture {
 
 	CPPUNIT_TEST_SUITE( twoauctiongeneralized_Test );
 
-    CPPUNIT_TEST( test );
+    CPPUNIT_TEST( test_not_enough_quantities );
+    CPPUNIT_TEST( test_enough_quantities );
 	CPPUNIT_TEST_SUITE_END();
 
   public:
 	void setUp();
 	void tearDown();
-	void test();
+	void test_not_enough_quantities();
+	void test_enough_quantities();
 
     //! filter definitions
     fieldDefList_t fieldDefs;
@@ -55,6 +57,8 @@ CPPUNIT_TEST_SUITE_REGISTRATION( twoauctiongeneralized_Test );
 
 void twoauctiongeneralized_Test::setUp() 
 {
+
+	cout << "Starting twoauctiongeneralized setup" << endl;
 
 	try
 	{
@@ -235,6 +239,8 @@ void twoauctiongeneralized_Test::setUp()
         }
         throw e;
 	}
+	
+	cout << "Ending twoauctiongeneralized Setup" << endl;
 }
 
 void twoauctiongeneralized_Test::tearDown() 
@@ -256,8 +262,7 @@ void twoauctiongeneralized_Test::tearDown()
 	}
 }
 
-
-void twoauctiongeneralized_Test::test() 
+void twoauctiongeneralized_Test::test_not_enough_quantities() 
 {
 	biddingObjectDB_t allocations;
 	biddingObjectDB_t *ptr = &allocations;
@@ -328,4 +333,84 @@ void twoauctiongeneralized_Test::test()
 			cout << "info:" << (*iter)->getInfo() << endl;
 		}
 	}
+}
+
+void twoauctiongeneralized_Test::test_enough_quantities() 
+{
+	
+	cout << "Starting twoauctiongeneralized test_enough_quantities" << endl;
+	
+	biddingObjectDB_t allocations;
+	biddingObjectDB_t *ptr = &allocations;
+	string auctionSet = "1";
+	string auctionName = "1";
+	time_t             start = time(NULL);
+	time_t             stop = start + 100;
+    string paramName;
+    string paramValue;
+	
+	mod = loader->getModule(moduleName.c_str());
+	procmod = dynamic_cast<ProcModule*>(mod);
+
+	if (procmod != NULL){
+
+		/* The following are the required parameters */
+
+		configParam_t *params = new configParam_t[7];
+		int i = 0;
+	
+		string paramName2 = "bandwidth01";
+		string paramValue2 = "45";
+		params[i].name = (char* ) paramName2.c_str();
+		params[i].value = (char *) paramValue2.c_str();
+		i++;
+    	
+		string paramName3 = "bandwidth02";
+		string paramValue3 = "45";
+		params[i].name = (char* ) paramName3.c_str();
+		params[i].value = (char *) paramValue3.c_str();
+		i++;
+
+		string paramName4 = "reserveprice01";
+		string paramValue4 = "0.15";
+		params[i].name = (char* ) paramName4.c_str();
+		params[i].value = (char *) paramValue4.c_str();
+		i++;
+
+		string paramName5 = "reserveprice02";
+		string paramValue5 = "0.5";
+		params[i].name = (char* ) paramName5.c_str();
+		params[i].value = (char *) paramValue5.c_str();
+		i++;
+
+		string paramName6 = "maxvalue01";
+		string paramValue6 = "0.5";
+		params[i].name = (char* ) paramName6.c_str();
+		params[i].value = (char *) paramValue6.c_str();
+		i++;
+
+		string paramName7 = "maxvalue02";
+		string paramValue7 = "0.9";
+		params[i].name = (char* ) paramName7.c_str();
+		params[i].value = (char *) paramValue7.c_str();
+		i++;
+	
+		params[i].name = NULL;
+		params[i].value = NULL;
+		
+		cout << "before going into execute" << endl;
+		
+		procmod->getAPI()->execute(manager->getFieldDefs(),
+								 manager->getFieldVals(),
+								 params, 
+								 auctionSet, auctionName,
+								 start, stop, bids, &ptr );
+		
+		biddingObjectDBIter_t iter;
+		for (iter = ptr->begin(); iter != ptr->end(); iter++){
+			cout << "info:" << (*iter)->getInfo() << endl;
+		}
+	}
+	
+	cout << "Ending twoauctiongeneralized test_enough_quantities" << endl;
 }

@@ -555,7 +555,8 @@ int calculateRequestedQuantities(auction::biddingObjectDB_t *bids)
 }
 
 void createRequest(auction::biddingObjectDB_t * bids_low, auction::biddingObjectDB_t * bids_high, 
-				LAuctionRequestDB_t &lrequest, HAuctionRequestDB_t &hrequest, double qStar, int *nh, int *nl)
+				   LAuctionRequestDB_t &lrequest, HAuctionRequestDB_t &hrequest, double qStar, 
+				   double reserve_price_low, int *nh, int *nl)
 {
 
 #ifdef DEBUG
@@ -579,14 +580,17 @@ void createRequest(auction::biddingObjectDB_t * bids_low, auction::biddingObject
 		for ( elem_iter = elems->begin(); elem_iter != elems->end(); ++elem_iter )
 		{
 			
+			double price = getDoubleField(&(elem_iter->second), "unitprice");
 			double quantity = getDoubleField(&(elem_iter->second), "quantity");
-			if ( quantity > 0 ){
+			
+			if ( quantity > 0 ) {
 				alloc_proc_t alloc;
 				alloc.bidSet = bid->getBiddingObjectSet();
 				alloc.bidName = bid->getBiddingObjectName();
 				alloc.elementName = elem_iter->first;
 				alloc.sessionId = bid->getSession();
 				alloc.quantity = quantity;
+				alloc.originalPrice = price;
 				lrequest[index][j] = alloc;
 				j = j + 1;
 				nltmp = nltmp + quantity;
@@ -635,6 +639,7 @@ void createRequest(auction::biddingObjectDB_t * bids_low, auction::biddingObject
 			alloc1.elementName = elem_iter->first;
 			alloc1.sessionId = bid->getSession();
 			alloc1.quantity = quantity - unitsToPass;
+			alloc1.originalPrice = price;
 			hrequest.insert(make_pair(price,alloc1));
 			nhtmp = nhtmp + quantity - unitsToPass;
 			
@@ -645,6 +650,7 @@ void createRequest(auction::biddingObjectDB_t * bids_low, auction::biddingObject
 			alloc2.elementName = elem_iter->first;
 			alloc2.sessionId = bid->getSession();
 			alloc2.quantity = unitsToPass;
+			alloc1.originalPrice = price;
 			allocBid.push_back(alloc2);
 			j =j + 1; 
 			
@@ -683,6 +689,32 @@ void executeAuctionRandomAllocation(auction::fieldDefList_t *fieldDefs, auction:
 	map<string,auction::BiddingObject *>::iterator alloc_iter;
 	
 	int index;
+	
+	// Create allocations for Bids that are below the reserved price.
+	for (size_t m = bidsToFulfil.size() - 1; m >= 0; m--){
+		for (size_t l = (bidsToFulfil[m]).size()-1; l >= 0; l--){
+			if ((bidsToFulfil[m][l]).originalPrice < price){
+				if ( allocations.find(makeKey(aset, aname,(bidsToFulfil[m][l]).bidSet, (bidsToFulfil[m][l]).bidName )) == allocations.end()) {
+					auction::BiddingObject *alloc = 
+					createAllocation(fieldDefs, fieldVals, aset, aname, (bidsToFulfil[m][l]).bidSet, 
+									 (bidsToFulfil[m][l]).bidName, (bidsToFulfil[m][l]).sessionId,
+									  start, stop, 0, price);
+									  
+					allocations[makeKey(aset, aname,
+									(bidsToFulfil[m][l]).bidSet, (bidsToFulfil[m][l]).bidName)] = alloc;
+				}
+
+				// Remove the node.
+				(bidsToFulfil[m]).erase(bidsToFulfil[m].begin() + l);
+			}
+		}
+		
+		// Remove the bid if all their price elements were less than the reserved price.
+		if ((bidsToFulfil[m]).size() == 0){
+			bidsToFulfil.erase(bidsToFulfil.begin() + m);
+		}	
+		
+	}
 	
 	// Allocates randomly the available quantities
 	for (int j = 0; j < qtyAvailable; j++){
@@ -730,7 +762,7 @@ void executeAuctionRandomAllocation(auction::fieldDefList_t *fieldDefs, auction:
 
 double executeAuction(auction::fieldDefList_t *fieldDefs, auction::fieldValList_t *fieldVals, string aset, 
 					  string aname, time_t start, time_t stop, HAuctionRequestDB_t &orderedBids, double qtyAvailable, 
-					  map<string,auction::BiddingObject *> &allocations)
+					  map<string,auction::BiddingObject *> &allocations, double reservedPrice)
 {
 
 	
@@ -746,19 +778,24 @@ double executeAuction(auction::fieldDefList_t *fieldDefs, auction::fieldValList_
 		do
 		{ 
 			--it;
-					
-			if ( qtyAvailable < (it->second).quantity){
-				(it->second).quantity = qtyAvailable;
-				if (qtyAvailable > 0){
-					sellPrice = it->first; 
-					qtyAvailable = 0;
-				 }
-			}
-			else{
-				qtyAvailable = qtyAvailable - (it->second).quantity;
-				sellPrice = it->first;
-			}
 			
+			if 	(it->first < reservedPrice){
+				(it->second).quantity = 0;
+				sellPrice = reservedPrice;
+			}
+			else {
+				if ( qtyAvailable < (it->second).quantity){
+					(it->second).quantity = qtyAvailable;
+					if (qtyAvailable > 0){
+						sellPrice = it->first; 
+						qtyAvailable = 0;
+					 }
+				}
+				else{
+					qtyAvailable = qtyAvailable - (it->second).quantity;
+					sellPrice = it->first;
+				}
+			}
 		} while (it != orderedBids.begin());
 	
 		map<string,auction::BiddingObject *>::iterator alloc_iter;
@@ -852,7 +889,7 @@ void auction::execute( auction::fieldDefList_t *fieldDefs, auction::fieldValList
 #ifdef DEBUG
 	cout << "two auction generalized module: start execute" << (int) bids->size() << endl;
 #endif
-
+	
 	float bandwidth_to_sell_low = getResourceAvailability( params, 0 );
 	float bandwidth_to_sell_high = getResourceAvailability( params, 1 );
 	double reserve_price_low = getReservePrice( params, 0 );	
@@ -860,90 +897,129 @@ void auction::execute( auction::fieldDefList_t *fieldDefs, auction::fieldValList
 	double bl = getMaximumValue( params, 0 );	
 	double bh = getMaximumValue( params, 1 );	
 	
-	auction::biddingObjectDB_t *bids_low = new auction::biddingObjectDB_t();
-	auction::biddingObjectDB_t *bids_high = new auction::biddingObjectDB_t();
+	float totalReq = calculateRequestedQuantities(bids);
 	
-	// Order bids classifying them by whether they compete on the low and high auction.
-	separateBids(bids,bl, bh, bids_low, bids_high);
+	cout << "totalReq:" << totalReq << "total units:" << bandwidth_to_sell_low + bandwidth_to_sell_high << endl;
 	
-	// Calculate the number of bids on both auctions.
-	int nl = calculateRequestedQuantities(bids_low);
-	int nh = calculateRequestedQuantities(bids_high);
-	
-	double qStar = 0;
-	double Q = 0.2;
-	int val_return = 0; 
-	
-	if ((nl > 0) && (nh > 0)){ 
-	
-		// Find the probability of changing from the high budget to low budget auction.
-		TwoAuctionMechanismGeneralized *mechanism = new TwoAuctionMechanismGeneralized();
-		double a = 0.01;
-		double b = 0.8;
-					 	 		
+	if (totalReq > (bandwidth_to_sell_low + bandwidth_to_sell_high))
+	{ 
 		
-		val_return = mechanism->zeroin(nh, nl, bh, bl, bandwidth_to_sell_high, 
-					bandwidth_to_sell_low, reserve_price_high, reserve_price_low, Q,  &a, &b);
-		qStar = a;			
+		cout << "Splitting resources:" << endl;
 		
-		while (qStar >= 0.25){
-			Q = Q + 0.03;
-			a = 0.01;
-			b = 0.8;
-			val_return = mechanism->zeroin(nh, nl, bh, bl, bandwidth_to_sell_high, 
-					bandwidth_to_sell_low, reserve_price_high, reserve_price_low, Q,  &a, &b);
+		auction::biddingObjectDB_t *bids_low = new auction::biddingObjectDB_t();
+		auction::biddingObjectDB_t *bids_high = new auction::biddingObjectDB_t();
+		
+		// Order bids classifying them by whether they compete on the low and high auction.
+		separateBids(bids,bl, bh, bids_low, bids_high);
+		
+		// Calculate the number of bids on both auctions.
+		int nl = calculateRequestedQuantities(bids_low);
+		int nh = calculateRequestedQuantities(bids_high);
+		
+		double qStar = 0;
+		double Q = 0.2;
+		
+		cout << "Starting the execution of the mechanism" << endl;
+		
+		if ((nl > 0) && (nh > 0)){ 
+		
+			// Find the probability of changing from the high budget to low budget auction.
+			TwoAuctionMechanismGeneralized *mechanism = new TwoAuctionMechanismGeneralized();
+			double a = 0.01;
+			double b = 0.8;
 			
-			qStar = a;	
-									  
+			mechanism->zeroin(nh, nl, bh, bl, bandwidth_to_sell_high, 
+						bandwidth_to_sell_low, reserve_price_high, reserve_price_low, Q,  &a, &b);
+			qStar = a;			
+			
+			while ((qStar >= 0.25) and (Q <= 1.0)){
+				Q = Q + 0.03;
+				a = 0.01;
+				b = 0.8;
+				
+				mechanism->zeroin(nh, nl, bh, bl, bandwidth_to_sell_high, 
+						bandwidth_to_sell_low, reserve_price_high, reserve_price_low, Q,  &a, &b);
+				
+				qStar = a;	
+				
+				cout << "Q:" << Q << "qStar:" << qStar << endl;
+										  
+			}
+			
+			delete mechanism;
 		}
 		
-		cout << "Q:" << Q << "qStar:" << qStar << endl;
+		cout << "Finished the execution of the mechanism" << endl;
 		
-		delete mechanism;
-	}
-
-	LAuctionRequestDB_t  lrequests(bids_low->size(), vector<alloc_proc_t>(1)  );
-	HAuctionRequestDB_t  hrequests;
-	
-	// Create requests for both auctions, it pass the users from an auction to the other.
-	createRequest(bids_low, bids_high, lrequests, hrequests, qStar, &nh, &nl);
-					
-	// Execute auctions.
-	map<string,auction::BiddingObject *> alloctions_low;
-	
-	executeAuctionRandomAllocation(fieldDefs, fieldVals, reserve_price_low, aset, aname, start, stop, 
-									  lrequests, bandwidth_to_sell_low, alloctions_low);
+		LAuctionRequestDB_t  lrequests(bids_low->size(), vector<alloc_proc_t>(1)  );
+		HAuctionRequestDB_t  hrequests;
+		
+		// Create requests for both auctions, it pass the users from an auction to the other.
+		createRequest(bids_low, bids_high, lrequests, hrequests, qStar, reserve_price_low, &nh, &nl);
 						
-	map<string,auction::BiddingObject *> alloctions_high;
-	executeAuction( fieldDefs, fieldVals, aset, aname, start, stop,
-									  hrequests, bandwidth_to_sell_low, alloctions_high);
-	
-	cout << "after executeAuction high budget users" << endl;
-	
-	if (Q > 0){
-		// change bids from the high budget to low budget auction.
-		ApplyMechanism( fieldDefs, fieldVals, start, stop, alloctions_high, reserve_price_low, Q);
-	}
+		// Execute auctions.
+		map<string,auction::BiddingObject *> alloctions_low;
 		
-	// Convert from the map to the final allocationDB result
-	map<string,auction::BiddingObject *>::iterator alloc_iter;
-	for ( alloc_iter = alloctions_low.begin(); 
-				alloc_iter != alloctions_low.end(); ++alloc_iter )
-	{
-		(*allocationdata)->push_back(alloc_iter->second);
-	}
+		executeAuctionRandomAllocation(fieldDefs, fieldVals, reserve_price_low, aset, aname, start, stop, 
+										  lrequests, bandwidth_to_sell_low, alloctions_low);
+							
+		map<string,auction::BiddingObject *> alloctions_high;
+		executeAuction( fieldDefs, fieldVals, aset, aname, start, stop,
+						 hrequests, bandwidth_to_sell_low, alloctions_high, reserve_price_high);
+		
+		cout << "after executeAuction high budget users" << endl;
+		
+		if (Q > 0){
+			// change bids from the high budget to low budget auction.
+			ApplyMechanism( fieldDefs, fieldVals, start, stop, alloctions_high, reserve_price_low, Q);
+		}
+			
+		// Convert from the map to the final allocationDB result
+		map<string,auction::BiddingObject *>::iterator alloc_iter;
+		for ( alloc_iter = alloctions_low.begin(); 
+					alloc_iter != alloctions_low.end(); ++alloc_iter )
+		{
+			(*allocationdata)->push_back(alloc_iter->second);
+		}
 
-	// Convert from the map to the final allocationDB result
-	for ( alloc_iter = alloctions_high.begin(); 
-				alloc_iter != alloctions_high.end(); ++alloc_iter )
-	{
-		(*allocationdata)->push_back(alloc_iter->second);
+		// Convert from the map to the final allocationDB result
+		for ( alloc_iter = alloctions_high.begin(); 
+					alloc_iter != alloctions_high.end(); ++alloc_iter )
+		{
+			(*allocationdata)->push_back(alloc_iter->second);
+		}
+		
+		// Free the memory allocated to these two containers.
+		delete bids_low;
+		delete bids_high;
+	} 
+	else {
+		
+		cout << "auctioning without splitting resources:" << endl;
+		
+		// All bids get units and pay the reserved price of the L Auction
+		int nl, nh = 0;
+		auction::biddingObjectDB_t *bids_low = new auction::biddingObjectDB_t();
+		LAuctionRequestDB_t  lrequests(1, vector<alloc_proc_t>(1)  );
+		HAuctionRequestDB_t  hrequests;
+	
+		createRequest(bids_low, bids, lrequests, hrequests, 0, reserve_price_low,  &nh, &nl);
+
+		map<string,auction::BiddingObject *> alloctions_high;
+		executeAuction( fieldDefs, fieldVals, aset, aname, start, stop,
+						hrequests, totalReq, alloctions_high, reserve_price_low);
+
+		// Convert from the map to the final allocationDB result
+		map<string,auction::BiddingObject *>::iterator alloc_iter;
+		for ( alloc_iter = alloctions_high.begin(); 
+					alloc_iter != alloctions_high.end(); ++alloc_iter )
+		{
+			(*allocationdata)->push_back(alloc_iter->second);
+		}
+		
+		delete bids_low;
+		
 	}
-	
-	// Free the memory allocated to these two containers.
-	delete bids_low;
-	delete bids_high;
-	
 #ifdef DEBUG	
 	cout << "two auction generalized module: end execute" <<  endl;
 #endif

@@ -279,38 +279,45 @@ TwoAuctionMechanismGeneralized::LoadQuadrature(int n, int k, quadrature_type_t t
 		
 	if (filename.size() > 0){
 	
-		fs.open(filename.c_str(), std::fstream::in);
-		
-		if (limit_type == QUADRATURE_LOWER_LIMIT){
-			vector<string> w0b;
-			string tline_0b;
-			std::getline(fs, tline_0b);
-			split(w0b, tline_0b,string(","));
-			for (size_t k=0; k < w0b.size(); k++){
-			   w0b[k] = removeSpaces(w0b[k]);
-			   if ( !w0b[k].empty()){
-					result.push_back(atof(w0b[k].c_str()));
-			   }
-			}
-		}
-		else
-		{
-			vector<string> w01;
-			string tline_0b, tline_01; 
-			std::getline(fs, tline_0b);
-			std::getline(fs, tline_01);
+		try {
+			fs.open(filename.c_str(), std::fstream::in);
 			
-			split(w01, tline_01,string(","));
-			for (size_t k=0;  k < w01.size(); k++){
-				w01[k] = removeSpaces(w01[k]);
-				if ( !w01[k].empty()){
-					result.push_back(atof(w01[k].c_str())); 
+			if (limit_type == QUADRATURE_LOWER_LIMIT){
+				vector<string> w0b;
+				string tline_0b;
+				std::getline(fs, tline_0b);
+				split(w0b, tline_0b,string(","));
+				for (size_t k=0; k < w0b.size(); k++){
+				   w0b[k] = removeSpaces(w0b[k]);
+				   if ( !w0b[k].empty()){
+						result.push_back(atof(w0b[k].c_str()));
+				   }
 				}
 			}
+			else
+			{
+				vector<string> w01;
+				string tline_0b, tline_01; 
+				std::getline(fs, tline_0b);
+				std::getline(fs, tline_01);
+				
+				split(w01, tline_01,string(","));
+				for (size_t k=0;  k < w01.size(); k++){
+					w01[k] = removeSpaces(w01[k]);
+					if ( !w01[k].empty()){
+						result.push_back(atof(w01[k].c_str())); 
+					}
+				}
+			}
+			
+			fs.close();
+		} catch (std::ifstream::failure e) {
+			throw Error("Exception opening/reading/closing file");
 		}
-		
-		fs.close();
+	} else {
+		throw Error("invalid type of element to obtain for the quadrature.");
 	}
+	
 }
 
  
