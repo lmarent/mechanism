@@ -960,7 +960,7 @@ void auction::execute( auction::fieldDefList_t *fieldDefs, auction::fieldValList
 						bandwidth_to_sell_low, reserve_price_high, reserve_price_low, Q,  &a, &b);
 			qStar = a;			
 			
-			while ((qStar >= 0.25) and (Q <= 1.0)){
+			while ((qStar >= 0.25) and (Q < 1.0)){
 				Q = Q + 0.03;
 				a = 0.01;
 				b = 0.8;
@@ -1022,7 +1022,7 @@ void auction::execute( auction::fieldDefList_t *fieldDefs, auction::fieldValList
 		fs.open(filename.c_str(),ios::app);
 		if (!fs.fail()){
 			fs << "starttime:" << start << ":endtime:" << stop;
-			fs << ":demand:" << totalReq << ":qty_sell_low:" << qtySellLow << ":qty_sell_high:" << qtySellHigh;
+			fs << ":demand low:" << nl << ":qty_sell_low:" << qtySellLow << ":demand high:" << nh << ":qty_sell_high:" << qtySellHigh;
 			fs << ":sell_price_low:" << sellPriceLow << ":sell price_high:" << sellPriceHigh;
 			fs << ":Q:" << Q << ":qStar:" << qStar << "\n"; 
 			fs.close( );  
