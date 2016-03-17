@@ -375,6 +375,37 @@ void incrementQuantityAllocation(auction::fieldValList_t *fieldVals,
 	
 }
 
+int calculateRequestedQuantities(auction::biddingObjectDB_t *bids)
+{
+
+#ifdef DEBUG
+	cout << "bas module: starting calculateRequestedQuantities" << endl;
+#endif	
+	
+	int sumQuantity = 0;
+	
+	auction::biddingObjectDBIter_t bid_iter; 
+	for (bid_iter = bids->begin(); bid_iter != bids->end(); ++bid_iter){
+		auction::BiddingObject * bid = *bid_iter;
+		auction::elementList_t *elems = bid->getElements();
+		auction::elementListIter_t elem_iter;
+		
+		for ( elem_iter = elems->begin(); elem_iter != elems->end(); ++elem_iter )
+		{
+			int quantity = floor(getDoubleField(&(elem_iter->second), "quantity"));
+			sumQuantity = sumQuantity + quantity;
+		}
+	}
+
+#ifdef DEBUG
+	cout << "bas module: ending calculateRequestedQuantities" << sumQuantity << endl;
+#endif
+	
+	return sumQuantity;
+}
+
+
+
 void auction::execute( auction::fieldDefList_t *fieldDefs, auction::fieldValList_t *fieldVals,  
 					   auction::configParam_t *params, string aset, string aname, time_t start, 
 					   time_t stop, auction::biddingObjectDB_t *bids, 
@@ -389,6 +420,8 @@ void auction::execute( auction::fieldDefList_t *fieldDefs, auction::fieldValList
 	reserve_price = getReservePrice( params );	
 	subsidy_val = getSubsidy( params );
 	discriminating_bid = getDiscriminatingBid( params );
+	
+	float totReq = calculateRequestedQuantities(bids);
 	
 	std::multimap<double, alloc_proc_t>  orderedBids;
 	// Order Bids by elements.
@@ -436,30 +469,30 @@ void auction::execute( auction::fieldDefList_t *fieldDefs, auction::fieldValList
 	{ 
 	    --it;
                 
-        if ( qtyAvailable < (it->second).quantity){
-			(it->second).quantity = qtyAvailable;
-			if (qtyAvailable > 0){
-				sellPrice = it->first; 
-				qtyAvailable = 0;
-			 }
+		if 	(it->first < reserve_price){
+			(it->second).quantity = 0;
 		}
-		else{
-			qtyAvailable = qtyAvailable - (it->second).quantity;
-			sellPrice = it->first;
+		else {
+
+			if ( qtyAvailable < (it->second).quantity){
+				(it->second).quantity = qtyAvailable;
+				if (qtyAvailable > 0){
+					sellPrice = it->first; 
+					qtyAvailable = 0;
+				 }
+			}
+			else{
+				qtyAvailable = qtyAvailable - (it->second).quantity;
+				sellPrice = it->first;
+			}
 		}
-		
 	} while (it != orderedBids.begin());
 	
 	// There are more units available than requested 
 	if ( qtyAvailable > 0 ){
 		sellPrice = reserve_price;
 	}
-	
-	// Selling price is less than reserve price, so let reserve price.
-	if (sellPrice < reserve_price){
-		sellPrice = reserve_price;
-	} 
-	
+		
 #ifdef DEBUG	
 	cout << "subsidy auction module: after executing the auction" << (int) bids->size() << endl;
 #endif
@@ -509,6 +542,22 @@ void auction::execute( auction::fieldDefList_t *fieldDefs, auction::fieldValList
 	{
 		(*allocationdata)->push_back(alloc_iter->second);
 	}
+
+	// Write a log with data of the auction
+	std::ofstream fs;
+	string filename = aset + "_" + aname + "_" + "_subsidy.txt";
+	fs.open(filename.c_str(),ios::app);
+	if (!fs.fail()){
+		cout << "opening the file: status ok" << endl;
+		
+		fs << "starttime:" << start << ":endtime:" << stop;
+		fs << ":demand:" << totReq << ":qty_sell:" << bandwidth_to_sell - qtyAvailable;
+		fs << ":price:" << sellPrice << "\n"; 
+		fs.close( );
+	} else {
+		cout << "We had problems opening the file" << endl;
+	}
+
 	
 #ifdef DEBUG	
 	cout << "subsidy auction module: end execute" <<  endl;
