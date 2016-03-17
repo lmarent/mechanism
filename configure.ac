@@ -126,7 +126,7 @@ AC_HEADER_STDBOOL
 # Checks for library functions.
 AC_CHECK_FUNCS([alarm bzero floor getaddrinfo inet_ntoa gettimeofday memmove memset select socket strdup strchr strerror strstr atoll strtof getopt_long])
 
-PKG_CHECK_MODULES(OPENSSL, openssl,
+PKG_CHECK_MODULES(OPENSSL, openssl  >= 0.9.8 ,
         CXXFLAGS="$CXXFLAGS `pkg-config --cflags openssl`";
         LIBS="$LIBS -lcrypto `pkg-config --libs-only-L --libs-only-other openssl`")
 
