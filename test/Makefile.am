@@ -11,6 +11,7 @@ test_runner_SOURCES =  @top_srcdir@/src/TwoAuctionMechanism.cpp \
 					   @top_srcdir@/test/twoauction_test.cpp \
 					   @top_srcdir@/test/twoauctionuser_test.cpp \
 					   @top_srcdir@/test/twoauctiongeneralized_test.cpp \
+					   @top_srcdir@/test/twoauctionperfectinformation_test.cpp \
 					   @top_srcdir@/test/subsidyauction_test.cpp \
 					   @top_srcdir@/test/subsidyauctionuser_test.cpp \
 					   @top_srcdir@/test/test_runner.cpp
