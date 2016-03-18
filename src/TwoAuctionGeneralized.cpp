@@ -928,21 +928,23 @@ void auction::execute( auction::fieldDefList_t *fieldDefs, auction::fieldValList
 	double sellPriceHigh = 0;
 	
 	cout << "totalReq:" << totalReq << "total units:" << bandwidth_to_sell_low + bandwidth_to_sell_high << endl;
+
+	auction::biddingObjectDB_t *bids_low = new auction::biddingObjectDB_t();
+	auction::biddingObjectDB_t *bids_high = new auction::biddingObjectDB_t();
 	
-	if (totalReq > (bandwidth_to_sell_low + bandwidth_to_sell_high))
+	// Order bids classifying them by whether they compete on the low and high auction.
+	separateBids(bids,bl, bh, bids_low, bids_high);
+		
+	// Calculate the number of bids on both auctions.
+	int nl = calculateRequestedQuantities(bids_low);
+	int nh = calculateRequestedQuantities(bids_high);
+	
+	if ((totalReq > (bandwidth_to_sell_low + bandwidth_to_sell_high)) and 
+		(bandwidth_to_sell_high < nh))
 	{ 
 		
 		cout << "Splitting resources:" << endl;
 		
-		auction::biddingObjectDB_t *bids_low = new auction::biddingObjectDB_t();
-		auction::biddingObjectDB_t *bids_high = new auction::biddingObjectDB_t();
-		
-		// Order bids classifying them by whether they compete on the low and high auction.
-		separateBids(bids,bl, bh, bids_low, bids_high);
-		
-		// Calculate the number of bids on both auctions.
-		int nl = calculateRequestedQuantities(bids_low);
-		int nh = calculateRequestedQuantities(bids_high);
 		
 		double qStar = 0;
 		double Q = 0.2;
@@ -1008,21 +1010,22 @@ void auction::execute( auction::fieldDefList_t *fieldDefs, auction::fieldValList
 		{
 			(*allocationdata)->push_back(alloc_iter->second);
 		}
-
+				
 		// Convert from the map to the final allocationDB result
 		for ( alloc_iter = alloctions_high.begin(); 
 					alloc_iter != alloctions_high.end(); ++alloc_iter )
 		{
 			(*allocationdata)->push_back(alloc_iter->second);
 		}
-
+				
 		// Write a log with data of the auction
 		std::ofstream fs;
 		string filename = aset + "_" + aname + "_" + "_twoauctiongeneralized.txt";
 		fs.open(filename.c_str(),ios::app);
 		if (!fs.fail()){
 			fs << "starttime:" << start << ":endtime:" << stop;
-			fs << ":demand low:" << nl << ":qty_sell_low:" << qtySellLow << ":demand high:" << nh << ":qty_sell_high:" << qtySellHigh;
+			fs << ":demand:" << totalReq << ":demand low:" << nl << ":qty_sell_low:";
+			fs << qtySellLow << ":demand high:" << nh << ":qty_sell_high:" << qtySellHigh;
 			fs << ":sell_price_low:" << sellPriceLow << ":sell price_high:" << sellPriceHigh;
 			fs << ":Q:" << Q << ":qStar:" << qStar << "\n"; 
 			fs.close( );  
@@ -1035,18 +1038,17 @@ void auction::execute( auction::fieldDefList_t *fieldDefs, auction::fieldValList
 	else {
 		
 		cout << "auctioning without splitting resources:" << endl;
-		
-		// All bids get units and pay the reserved price of the L Auction
-		int nl, nh = 0;
-		auction::biddingObjectDB_t *bids_low = new auction::biddingObjectDB_t();
+				
+		auction::biddingObjectDB_t *bids_zero_low = new auction::biddingObjectDB_t();
 		LAuctionRequestDB_t  lrequests(1, vector<alloc_proc_t>(1)  );
 		HAuctionRequestDB_t  hrequests;
 	
-		createRequest(bids_low, bids, lrequests, hrequests, 0, reserve_price_low,  &nh, &nl);
+		int nl2, nh2 = 0;
+		createRequest(bids_zero_low, bids, lrequests, hrequests, 0, reserve_price_low,  &nh2, &nl2);
 
 		map<string,auction::BiddingObject *> alloctions_high;
 		sellPriceLow = executeAuction( fieldDefs, fieldVals, aset, aname, start, stop,
-						hrequests, totalReq, alloctions_high, reserve_price_low, qtySellLow);
+						hrequests, bandwidth_to_sell_high + bandwidth_to_sell_low, alloctions_high, reserve_price_low, qtySellLow);
 
 		// Convert from the map to the final allocationDB result
 		map<string,auction::BiddingObject *>::iterator alloc_iter;
@@ -1055,22 +1057,26 @@ void auction::execute( auction::fieldDefList_t *fieldDefs, auction::fieldValList
 		{
 			(*allocationdata)->push_back(alloc_iter->second);
 		}
-
+	
 		// Write a log with data of the auction
 		std::ofstream fs;
 		string filename = aset + "_" + aname + "_" + "_twoauctiongeneralized.txt";
 		fs.open(filename.c_str(),ios::app);
 		if (!fs.fail()){
 			fs << "starttime:" << start << ":endtime:" << stop;
-			fs << ":demand:" << totalReq << ":qty_sell:" << qtySellLow;
+			fs << ":demand:" << totalReq << ":demand_low:" << nl;
+			fs << ":demand_high:" << nh << ":qty_sell:" << qtySellLow;
 			fs << ":price:" << sellPriceLow << "\n"; 
 			fs.close( );  
 		}
 
-		
-		delete bids_low;
+		delete bids_zero_low;
 		
 	}
+
+	delete bids_low;
+	delete bids_high;
+
 #ifdef DEBUG	
 	cout << "two auction generalized module: end execute" <<  endl;
 #endif

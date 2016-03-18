@@ -673,19 +673,22 @@ void auction::execute( auction::fieldDefList_t *fieldDefs, auction::fieldValList
 	double bh = getMaximumValue( params, 1 );
 	float qtySellLow = 0;
 	float qtySellHigh = 0;
+
+	auction::biddingObjectDB_t *bids_low = new auction::biddingObjectDB_t();
+	auction::biddingObjectDB_t *bids_high = new auction::biddingObjectDB_t();
+		
+	// Order bids classifying them by whether they compete on the low and high auction.
+	separateBids(bids,bl, bh, bids_low, bids_high);
+		
+	// Calculate the number of bids on both auctions.
+	int nl = calculateRequestedQuantities(bids_low);
+	int nh = calculateRequestedQuantities(bids_high);
+
 	
 	float totalReq = calculateRequestedQuantities(bids);
-	if (totalReq > (bandwidth_to_sell_low + bandwidth_to_sell_high))
+	if ( (totalReq > (bandwidth_to_sell_low + bandwidth_to_sell_high)) &&
+		  (bandwidth_to_sell_high < nh) )
 	{
-		auction::biddingObjectDB_t *bids_low = new auction::biddingObjectDB_t();
-		auction::biddingObjectDB_t *bids_high = new auction::biddingObjectDB_t();
-		
-		// Order bids classifying them by whether they compete on the low and high auction.
-		separateBids(bids,bl, bh, bids_low, bids_high);
-		
-		// Calculate the number of bids on both auctions.
-		int nl = calculateRequestedQuantities(bids_low);
-		int nh = calculateRequestedQuantities(bids_high);
 			
 		// Execute auctions.
 		map<string,auction::BiddingObject *> alloctions_low;
@@ -725,12 +728,14 @@ void auction::execute( auction::fieldDefList_t *fieldDefs, auction::fieldValList
 		fs.open(filename.c_str(),ios::app);
 		if (!fs.fail()){
 			fs << "starttime:" << start << ":endtime:" << stop;
-			fs << ":demand:" << nh + nl << ":qty_sell_low:" << qtySellLow << ":qty_sell_high:" << qtySellHigh;
+			fs << ":demand:" << totalReq << ":demand_low:" <<  nl << ":qty_sell_low:" << qtySellLow;
+			fs << ":demand_high:" << nh << ":qty_sell_high:" << qtySellHigh;
 			fs << ":sell_price_low:" << price_low << ":sell price_high:" << price_high << "\n"; 
 			fs.close( );  
 		}
 	} else {
 	
+		
 		float qtySellLow;
 		cout << "auctioning without splitting resources:" << endl;
 		
@@ -738,7 +743,7 @@ void auction::execute( auction::fieldDefList_t *fieldDefs, auction::fieldValList
 
 		map<string,auction::BiddingObject *> alloctions_high;
 		double sellPriceLow = executeAuction( fieldDefs, fieldVals, aset, aname, start, stop,
-						bids, totalReq, alloctions_high, reserve_price_low, qtySellLow);
+						bids, bandwidth_to_sell_high + bandwidth_to_sell_low , alloctions_high, reserve_price_low, qtySellLow);
 
 		// Convert from the map to the final allocationDB result
 		map<string,auction::BiddingObject *>::iterator alloc_iter;
@@ -754,12 +759,18 @@ void auction::execute( auction::fieldDefList_t *fieldDefs, auction::fieldValList
 		fs.open(filename.c_str(),ios::app);
 		if (!fs.fail()){
 			fs << "starttime:" << start << ":endtime:" << stop;
-			fs << ":demand:" << totalReq << ":qty_sell:" << qtySellLow;
+			fs << ":totdemand:" << totalReq << ":demand low:" << nl;
+			fs << ":demand_high" << nh << ":qty_sell:" << qtySellLow;
 			fs << ":price:" << sellPriceLow << "\n"; 
 			fs.close( );  
 		}	
 	
 	}
+	
+	// Free the memory allocated to these two containers.
+	delete bids_low;
+	delete bids_high;
+	
 #ifdef DEBUG	
 	cout << "two auction perfect information module: end execute" <<  endl;
 #endif
