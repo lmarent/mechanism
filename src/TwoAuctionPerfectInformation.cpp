@@ -718,10 +718,6 @@ void auction::execute( auction::fieldDefList_t *fieldDefs, auction::fieldValList
 			(*allocationdata)->push_back(alloc_iter->second);
 		}
 		
-		// Free the memory allocated to these two containers.
-		delete bids_low;
-		delete bids_high;
-
 		// Write a log with data of the auction
 		std::ofstream fs;
 		string filename = aset + "_" + aname + "_" + "_twoauctionperfectinformation.txt";
@@ -760,7 +756,7 @@ void auction::execute( auction::fieldDefList_t *fieldDefs, auction::fieldValList
 		if (!fs.fail()){
 			fs << "starttime:" << start << ":endtime:" << stop;
 			fs << ":totdemand:" << totalReq << ":demand low:" << nl;
-			fs << ":demand_high" << nh << ":qty_sell:" << qtySellLow;
+			fs << ":demand_high:" << nh << ":qty_sell:" << qtySellLow;
 			fs << ":price:" << sellPriceLow << "\n"; 
 			fs.close( );  
 		}	

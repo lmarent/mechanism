@@ -200,32 +200,10 @@ void subsidyauctionuser_Test::test()
 			field3.name = iter->second.name;
 			field3.len = iter->second.len;
 			field3.type = iter->second.type;
-			string fvalue3 = "0.61";
+			string fvalue3 = "0.59";
 			field3.parseFieldValue(fvalue3);
 		} else {
 			throw Error("field unitbudget not found");
-		}
-
-		iter = auctionManagerPtr->getFieldDefs()->find("maxvalue01");
-		if (iter != auctionManagerPtr->getFieldDefs()->end()){
-			field4.name = iter->second.name;
-			field4.len = iter->second.len;
-			field4.type = iter->second.type;
-			string fvalue4 = "0.5";
-			field4.parseFieldValue(fvalue4);
-		} else {
-			throw Error("field maxvalue01 not found");
-		}
-
-		iter = auctionManagerPtr->getFieldDefs()->find("subsidy");
-		if (iter != auctionManagerPtr->getFieldDefs()->end()){
-			field5.name = iter->second.name;
-			field5.len = iter->second.len;
-			field5.type = iter->second.type;
-			string fvalue5 = "1.2";
-			field5.parseFieldValue(fvalue5);
-		} else {
-			throw Error("field subsidy not found");
 		}
 
 		fields.push_back(field1);

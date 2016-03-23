@@ -290,7 +290,7 @@ void twoauctiongeneralized_Test::test_not_enough_quantities()
 		i++;
     	
 		string paramName3 = "bandwidth02";
-		string paramValue3 = "20";
+		string paramValue3 = "30";
 		params[i].name = (char* ) paramName3.c_str();
 		params[i].value = (char *) paramValue3.c_str();
 		i++;

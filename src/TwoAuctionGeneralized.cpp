@@ -939,15 +939,15 @@ void auction::execute( auction::fieldDefList_t *fieldDefs, auction::fieldValList
 	int nl = calculateRequestedQuantities(bids_low);
 	int nh = calculateRequestedQuantities(bids_high);
 	
-	if ((totalReq > (bandwidth_to_sell_low + bandwidth_to_sell_high)) and 
-		(bandwidth_to_sell_high < nh))
+	if ((totalReq > (bandwidth_to_sell_low + bandwidth_to_sell_high)) 
+		&& (bandwidth_to_sell_high < nh))
 	{ 
 		
 		cout << "Splitting resources:" << endl;
 		
 		
 		double qStar = 0;
-		double Q = 0.2;
+		double Q = 0.1;
 		
 		cout << "Starting the execution of the mechanism" << endl;
 		
@@ -962,7 +962,7 @@ void auction::execute( auction::fieldDefList_t *fieldDefs, auction::fieldValList
 						bandwidth_to_sell_low, reserve_price_high, reserve_price_low, Q,  &a, &b);
 			qStar = a;			
 			
-			while ((qStar >= 0.25) and (Q < 1.0)){
+			while ((qStar >= 0.25) and (Q <= 0.97)){
 				Q = Q + 0.03;
 				a = 0.01;
 				b = 0.8;
@@ -971,10 +971,10 @@ void auction::execute( auction::fieldDefList_t *fieldDefs, auction::fieldValList
 						bandwidth_to_sell_low, reserve_price_high, reserve_price_low, Q,  &a, &b);
 				
 				qStar = a;	
-				
-				cout << "Q:" << Q << "qStar:" << qStar << endl;
-										  
+														  
 			}
+			
+			cout << "Q:" << Q << " qStar:" << qStar << endl;
 			
 			delete mechanism;
 		}
@@ -1031,9 +1031,6 @@ void auction::execute( auction::fieldDefList_t *fieldDefs, auction::fieldValList
 			fs.close( );  
 		}
 		
-		// Free the memory allocated to these two containers.
-		delete bids_low;
-		delete bids_high;
 	} 
 	else {
 		
