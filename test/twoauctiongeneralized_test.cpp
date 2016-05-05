@@ -47,7 +47,7 @@ class twoauctiongeneralized_Test : public CppUnit::TestFixture {
     Module *mod = NULL; 
     
     BiddingObjectManager *manager = NULL;
-    biddingObjectDB_t *bids = NULL;
+    auctioningObjectDB_t *bids = NULL;
     ConfigManager *conf= NULL;
     string moduleName;
     
@@ -64,11 +64,11 @@ void twoauctiongeneralized_Test::setUp()
 	{
 		
 		string filename;
-		biddingObjectDB_t *new_bids = NULL;
-		bids = new biddingObjectDB_t();
+		auctioningObjectDB_t *new_bids = NULL;
+		bids = new auctioningObjectDB_t();
 		moduleName = "libtwoauctiongen.so";
 		
-		BiddingObject *ptrBid;
+		BiddingObject *ptrBid, *ptrBid2;
 		
 		int domain = 1;
 		string fieldname = DEF_SYSCONFDIR "/auctionmanager/fielddef.xml";
@@ -79,7 +79,7 @@ void twoauctiongeneralized_Test::setUp()
 		filename = "../etc/example_generalized_bids1.xml";
 		new_bids = manager->parseBiddingObjects(filename);	
 		CPPUNIT_ASSERT( new_bids->size() == 1 );
-		ptrBid = (*new_bids)[0];
+		ptrBid = dynamic_cast<BiddingObject *>((*new_bids)[0]);
 		bids->push_back(ptrBid);
         saveDelete(new_bids);
         saveDelete(manager);
@@ -93,7 +93,8 @@ void twoauctiongeneralized_Test::setUp()
 		filename = "../etc/example_generalized_bids2.xml";
 		new_bids = manager->parseBiddingObjects(filename);	
 		CPPUNIT_ASSERT( new_bids->size() == 1 );
-		ptrBid = new BiddingObject(*((*new_bids)[0]));
+		ptrBid2 = dynamic_cast<BiddingObject *>((*new_bids)[0]);
+		ptrBid = new BiddingObject(*ptrBid2);
 		bids->push_back(ptrBid);
         saveDelete(new_bids);
         saveDelete(manager);
@@ -107,7 +108,8 @@ void twoauctiongeneralized_Test::setUp()
 		filename = "../etc/example_generalized_bids3.xml";
 		new_bids = manager->parseBiddingObjects(filename);	
 		CPPUNIT_ASSERT( new_bids->size() == 1 );
-		ptrBid = new BiddingObject(*((*new_bids)[0]));
+		ptrBid2 = dynamic_cast<BiddingObject *>((*new_bids)[0]);
+		ptrBid = new BiddingObject(*ptrBid2);
  		bids->push_back(ptrBid);
         saveDelete(new_bids);
         saveDelete(manager);		
@@ -121,7 +123,8 @@ void twoauctiongeneralized_Test::setUp()
 		filename = "../etc/example_generalized_bids4.xml";
 		new_bids = manager->parseBiddingObjects(filename);	
 		CPPUNIT_ASSERT( new_bids->size() == 1 );
-		ptrBid = new BiddingObject(*((*new_bids)[0]));
+		ptrBid2 = dynamic_cast<BiddingObject *>((*new_bids)[0]);
+		ptrBid = new BiddingObject(*ptrBid2);
 		bids->push_back(ptrBid);
         saveDelete(new_bids);		
         saveDelete(manager);		
@@ -135,7 +138,8 @@ void twoauctiongeneralized_Test::setUp()
 		filename = "../etc/example_generalized_bids5.xml";
 		new_bids = manager->parseBiddingObjects(filename);	
 		CPPUNIT_ASSERT( new_bids->size() == 1 );
-		ptrBid = new BiddingObject(*((*new_bids)[0]));
+		ptrBid2 = dynamic_cast<BiddingObject *>((*new_bids)[0]);
+		ptrBid = new BiddingObject(*ptrBid2);
 		bids->push_back(ptrBid);
         saveDelete(new_bids);		
         saveDelete(manager);		
@@ -149,7 +153,8 @@ void twoauctiongeneralized_Test::setUp()
 		filename = "../etc/example_generalized_bids6.xml";
 		new_bids = manager->parseBiddingObjects(filename);	
 		CPPUNIT_ASSERT( new_bids->size() == 1 );
-		ptrBid = new BiddingObject(*((*new_bids)[0]));
+		ptrBid2 = dynamic_cast<BiddingObject *>((*new_bids)[0]);
+		ptrBid = new BiddingObject(*ptrBid2);
 		bids->push_back(ptrBid);
         saveDelete(new_bids);		
         saveDelete(manager);
@@ -163,7 +168,8 @@ void twoauctiongeneralized_Test::setUp()
 		filename = "../etc/example_generalized_bids7.xml";
 		new_bids = manager->parseBiddingObjects(filename);	
 		CPPUNIT_ASSERT( new_bids->size() == 1 );
-		ptrBid = new BiddingObject(*((*new_bids)[0]));
+		ptrBid2 = dynamic_cast<BiddingObject *>((*new_bids)[0]);
+		ptrBid = new BiddingObject(*ptrBid2);
 		bids->push_back(ptrBid);
         saveDelete(new_bids);		
         saveDelete(manager);
@@ -177,7 +183,8 @@ void twoauctiongeneralized_Test::setUp()
 		filename = "../etc/example_generalized_bids8.xml";
 		new_bids = manager->parseBiddingObjects(filename);	
 		CPPUNIT_ASSERT( new_bids->size() == 1 );
-		ptrBid = new BiddingObject(*((*new_bids)[0]));
+		ptrBid2 = dynamic_cast<BiddingObject *>((*new_bids)[0]);
+		ptrBid = new BiddingObject(*ptrBid2);
 		bids->push_back(ptrBid);
         saveDelete(new_bids);		
         saveDelete(manager);
@@ -191,7 +198,8 @@ void twoauctiongeneralized_Test::setUp()
 		filename = "../etc/example_generalized_bids9.xml";
 		new_bids = manager->parseBiddingObjects(filename);	
 		CPPUNIT_ASSERT( new_bids->size() == 1 );
-		ptrBid = new BiddingObject(*((*new_bids)[0]));
+		ptrBid2 = dynamic_cast<BiddingObject *>((*new_bids)[0]);
+		ptrBid = new BiddingObject(*ptrBid2);
 		bids->push_back(ptrBid);
         saveDelete(new_bids);		
         saveDelete(manager);
@@ -205,7 +213,8 @@ void twoauctiongeneralized_Test::setUp()
 		filename = "../etc/example_generalized_bids10.xml";
 		new_bids = manager->parseBiddingObjects(filename);	
 		CPPUNIT_ASSERT( new_bids->size() == 1 );
-		ptrBid = new BiddingObject(*((*new_bids)[0]));
+		ptrBid2 = dynamic_cast<BiddingObject *>((*new_bids)[0]);
+		ptrBid = new BiddingObject(*ptrBid2);
 		bids->push_back(ptrBid);
         saveDelete(new_bids);	
         saveDelete(manager);
@@ -264,8 +273,8 @@ void twoauctiongeneralized_Test::tearDown()
 
 void twoauctiongeneralized_Test::test_not_enough_quantities() 
 {
-	biddingObjectDB_t allocations;
-	biddingObjectDB_t *ptr = &allocations;
+	auctioningObjectDB_t allocations;
+	auctioningObjectDB_t *ptr = &allocations;
 	string auctionSet = "1";
 	string auctionName = "1";
 	time_t             start = time(NULL);
@@ -328,7 +337,7 @@ void twoauctiongeneralized_Test::test_not_enough_quantities()
 								 auctionSet, auctionName,
 								 start, stop, bids, &ptr );
 		
-		biddingObjectDBIter_t iter;
+		auctioningObjectDBIter_t iter;
 		for (iter = ptr->begin(); iter != ptr->end(); iter++){
 			cout << "info:" << (*iter)->getInfo() << endl;
 		}
@@ -340,8 +349,8 @@ void twoauctiongeneralized_Test::test_enough_quantities()
 	
 	cout << "Starting twoauctiongeneralized test_enough_quantities" << endl;
 	
-	biddingObjectDB_t allocations;
-	biddingObjectDB_t *ptr = &allocations;
+	auctioningObjectDB_t allocations;
+	auctioningObjectDB_t *ptr = &allocations;
 	string auctionSet = "1";
 	string auctionName = "1";
 	time_t             start = time(NULL);
@@ -406,7 +415,7 @@ void twoauctiongeneralized_Test::test_enough_quantities()
 								 auctionSet, auctionName,
 								 start, stop, bids, &ptr );
 		
-		biddingObjectDBIter_t iter;
+		auctioningObjectDBIter_t iter;
 		for (iter = ptr->begin(); iter != ptr->end(); iter++){
 			cout << "info:" << (*iter)->getInfo() << endl;
 		}
