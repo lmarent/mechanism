@@ -114,11 +114,11 @@ double getReservePrice( auction::configParam_t *params, int auction )
      
     if (numparams == 0)
 		throw auction::ProcError(AUM_PROC_PARAMETER_ERROR, 
-					"two auction generalized init module - not enought parameters");
+					"two auction init module - not enought parameters");
 	
 	if (price < 0)
 		throw auction::ProcError(AUM_PRICE_RESERVE_ERROR, 
-					"two auction generalized init module - The given reserve price is incorrect");
+					"two auction init module - The given reserve price is incorrect");
 	
 #ifdef DEBUG
 	cout << "Ending getReservePrice" << price << endl;
@@ -423,17 +423,21 @@ double getBidPrice(auction::BiddingObject *bid)
 	
 }
 
-void separateBids(auction::biddingObjectDB_t *bids,double bl, double bh, 
-					auction::biddingObjectDB_t *bids_low, auction::biddingObjectDB_t *bids_high)
+void separateBids(auction::auctioningObjectDB_t *bids, 
+				   double bl, double bh, 
+					auction::auctioningObjectDB_t *bids_low, 
+					 auction::auctioningObjectDB_t *bids_high)
 {
 
 #ifdef DEBUG
 	cout << "Starting separateBids" << endl;
 #endif
 
-	auction::biddingObjectDB_t::iterator iter;
+	auction::auctioningObjectDB_t::iterator iter;
 	for (iter = bids->begin();iter != bids->end(); ++iter){
-		auction::BiddingObject *bid = *iter;
+		auction::BiddingObject *bid = 
+					dynamic_cast<auction::BiddingObject *>(*iter);
+					
 		double price = getBidPrice(bid);
 		
 		if (price >= 0){
@@ -525,7 +529,7 @@ void addQuantityAllocation(auction::fieldValList_t *fieldVals,
 	
 }
 
-int calculateRequestedQuantities(auction::biddingObjectDB_t *bids)
+int calculateRequestedQuantities(auction::auctioningObjectDB_t *bids)
 {
 
 #ifdef DEBUG
@@ -534,9 +538,10 @@ int calculateRequestedQuantities(auction::biddingObjectDB_t *bids)
 	
 	int sumQuantity = 0;
 	
-	auction::biddingObjectDBIter_t bid_iter; 
+	auction::auctioningObjectDBIter_t bid_iter; 
 	for (bid_iter = bids->begin(); bid_iter != bids->end(); ++bid_iter){
-		auction::BiddingObject * bid = *bid_iter;
+		auction::BiddingObject *bid = 
+					dynamic_cast<auction::BiddingObject *>(*bid_iter);
 		auction::elementList_t *elems = bid->getElements();
 		auction::elementListIter_t elem_iter;
 		
@@ -554,9 +559,12 @@ int calculateRequestedQuantities(auction::biddingObjectDB_t *bids)
 	return sumQuantity;
 }
 
-void createRequest(auction::biddingObjectDB_t * bids_low, auction::biddingObjectDB_t * bids_high, 
-				   LAuctionRequestDB_t &lrequest, HAuctionRequestDB_t &hrequest, double qStar, 
-				   double reserve_price_low, int *nh, int *nl)
+void createRequest(auction::auctioningObjectDB_t * bids_low, 
+					auction::auctioningObjectDB_t * bids_high, 
+					 LAuctionRequestDB_t &lrequest, 
+					  HAuctionRequestDB_t &hrequest, 
+					   double qStar, double reserve_price_low, 
+						int *nh, int *nl)
 {
 
 #ifdef DEBUG
@@ -568,11 +576,12 @@ void createRequest(auction::biddingObjectDB_t * bids_low, auction::biddingObject
 	
 	// creates the request for the L auction.
 	int index = 0;
-	auction::biddingObjectDBIter_t bid_iter; 
+	auction::auctioningObjectDBIter_t bid_iter; 
 	for (bid_iter = bids_low->begin(); bid_iter != bids_low->end(); ++bid_iter)
 	{
-
-		auction::BiddingObject * bid = *bid_iter;				
+		auction::BiddingObject *bid = 
+					dynamic_cast<auction::BiddingObject *>(*bid_iter);	
+					
 		auction::elementList_t *elems = bid->getElements();
 				
 		auction::elementListIter_t elem_iter;
@@ -585,8 +594,8 @@ void createRequest(auction::biddingObjectDB_t * bids_low, auction::biddingObject
 			
 			if ( quantity > 0 ) {
 				alloc_proc_t alloc;
-				alloc.bidSet = bid->getBiddingObjectSet();
-				alloc.bidName = bid->getBiddingObjectName();
+				alloc.bidSet = bid->getSet();
+				alloc.bidName = bid->getName();
 				alloc.elementName = elem_iter->first;
 				alloc.sessionId = bid->getSession();
 				alloc.quantity = quantity;
@@ -612,7 +621,8 @@ void createRequest(auction::biddingObjectDB_t * bids_low, auction::biddingObject
 
 
 	for (bid_iter = bids_high->begin(); bid_iter != bids_high->end(); ++bid_iter){
-		auction::BiddingObject * bid = *bid_iter;
+		auction::BiddingObject *bid = 
+					dynamic_cast<auction::BiddingObject *>(*bid_iter);
 				
 		auction::elementList_t *elems = bid->getElements();
 		
@@ -634,8 +644,8 @@ void createRequest(auction::biddingObjectDB_t * bids_low, auction::biddingObject
 			
 			// quantities in the H auction.
 			alloc_proc_t alloc1;
-			alloc1.bidSet = bid->getBiddingObjectSet();
-			alloc1.bidName = bid->getBiddingObjectName();
+			alloc1.bidSet = bid->getSet();
+			alloc1.bidName = bid->getName();
 			alloc1.elementName = elem_iter->first;
 			alloc1.sessionId = bid->getSession();
 			alloc1.quantity = quantity - unitsToPass;
@@ -645,8 +655,8 @@ void createRequest(auction::biddingObjectDB_t * bids_low, auction::biddingObject
 			
 			// quantities in the L auction.
 			alloc_proc_t alloc2;
-			alloc2.bidSet = bid->getBiddingObjectSet();
-			alloc2.bidName = bid->getBiddingObjectName();
+			alloc2.bidSet = bid->getSet();
+			alloc2.bidName = bid->getName();
 			alloc2.elementName = elem_iter->first;
 			alloc2.sessionId = bid->getSession();
 			alloc2.quantity = unitsToPass;
@@ -654,7 +664,7 @@ void createRequest(auction::biddingObjectDB_t * bids_low, auction::biddingObject
 			allocBid.push_back(alloc2);
 			j =j + 1; 
 			
-			cout << "bid set:" << bid->getBiddingObjectSet() << "units pass:" << unitsToPass << endl;
+			cout << "bid set:" << bid->getSet() << "units pass:" << unitsToPass << endl;
 			nltmp = nltmp + unitsToPass;
 		}
 
@@ -676,9 +686,12 @@ void createRequest(auction::biddingObjectDB_t * bids_low, auction::biddingObject
 
 }
 
-double executeAuctionRandomAllocation(auction::fieldDefList_t *fieldDefs, auction::fieldValList_t *fieldVals, double price,
-					string aset, string aname, time_t start, time_t stop, LAuctionRequestDB_t &bidsToFulfil, float qtyAvailable, 
-					map<string,auction::BiddingObject *> &allocations, float &qtySell)
+void executeAuctionRandomAllocation(auction::fieldDefList_t *fieldDefs, 
+									auction::fieldValList_t *fieldVals, 
+									double price, string aset, string aname, 
+									time_t start, time_t stop, 
+									LAuctionRequestDB_t &bidsToFulfil, double qtyAvailable, 
+									map<string,auction::BiddingObject *> &allocations)
 {
 
 #ifdef DEBUG
@@ -736,9 +749,6 @@ double executeAuctionRandomAllocation(auction::fieldDefList_t *fieldDefs, auctio
 			break;
 		}
 		else{
-			
-			qtySell++;
-			
 			//The unit is assigned to the first allocation proc for the bid.
 			(bidsToFulfil[index][0]).quantity--;
 
@@ -766,27 +776,21 @@ double executeAuctionRandomAllocation(auction::fieldDefList_t *fieldDefs, auctio
 			}
 		}
 	}
-	
-	
-	
-	
+
 #ifdef DEBUG
 	cout << "execute Action random allocation" << endl;
 #endif
-	
-	return price;
+
 }
 
 double executeAuction(auction::fieldDefList_t *fieldDefs, auction::fieldValList_t *fieldVals, string aset, 
-					  string aname, time_t start, time_t stop, HAuctionRequestDB_t &orderedBids, float qtyAvailable, 
-					  map<string,auction::BiddingObject *> &allocations, double reservedPrice, float &sellQty)
+					  string aname, time_t start, time_t stop, HAuctionRequestDB_t &orderedBids, double qtyAvailable, 
+					  map<string,auction::BiddingObject *> &allocations, double reservedPrice)
 {
 
 	
 
 	double sellPrice = 0;
-	sellQty = 0;
-	float initQtyAvailable = qtyAvailable;
 
 #ifdef DEBUG	
 	cout << "two auction generalized module- qty available:" << qtyAvailable << endl;
@@ -800,6 +804,7 @@ double executeAuction(auction::fieldDefList_t *fieldDefs, auction::fieldValList_
 			
 			if 	(it->first < reservedPrice){
 				(it->second).quantity = 0;
+				sellPrice = reservedPrice;
 			}
 			else {
 				if ( qtyAvailable < (it->second).quantity){
@@ -815,13 +820,7 @@ double executeAuction(auction::fieldDefList_t *fieldDefs, auction::fieldValList_
 				}
 			}
 		} while (it != orderedBids.begin());
-
-		if (qtyAvailable > 0){
-			sellPrice = reservedPrice;
-		}
-		
-		sellQty = initQtyAvailable - qtyAvailable;
-		
+	
 		map<string,auction::BiddingObject *>::iterator alloc_iter;
 		
 		// Creates allocations
@@ -880,21 +879,21 @@ void ApplyMechanism(auction::fieldDefList_t *fieldDefs, auction::fieldValList_t 
 				unitsToPass = unitsToPass + 1;
 		}
 		
-		cout << "bid set:" << alloc->getBiddingObjectSet() << "qty to pass:" << unitsToPass << endl;		
+		cout << "bid set:" << alloc->getSet() << "qty to pass:" << unitsToPass << endl;		
 		
 		if (unitsToPass > 0){
 		
 			if (unitsToPass < quantity){
 				auction::BiddingObject * alloc2 = createAllocation( fieldDefs, fieldVals,
 								alloc->getAuctionSet(), alloc->getAuctionName(), 
-								alloc->getBiddingObjectSet(), bidName,
+								alloc->getSet(), bidName,
 								alloc->getSession(), start, stop, unitsToPass, price );
 				  
 				float unitsToAdd = unitsToPass *-1;
 				addQuantityAllocation(fieldVals, alloc, unitsToAdd);
 				
 				allocations[makeKey(alloc2->getAuctionSet(), alloc2->getAuctionName(),
-								alloc2->getBiddingObjectSet(), alloc2->getBiddingObjectName())] = alloc2;
+								alloc2->getSet(), alloc2->getName())] = alloc2;
 			} else {
 				changeAllocationPrice(fieldVals, alloc, price);	
 			}
@@ -906,8 +905,8 @@ void ApplyMechanism(auction::fieldDefList_t *fieldDefs, auction::fieldValList_t 
 
 void auction::execute( auction::fieldDefList_t *fieldDefs, auction::fieldValList_t *fieldVals,  
 					   auction::configParam_t *params, string aset, string aname, time_t start, 
-					   time_t stop, auction::biddingObjectDB_t *bids, 
-					   auction::biddingObjectDB_t **allocationdata )
+					   time_t stop, auction::auctioningObjectDB_t *bids, 
+					   auction::auctioningObjectDB_t **allocationdata )
 {
 
 #ifdef DEBUG
@@ -922,32 +921,26 @@ void auction::execute( auction::fieldDefList_t *fieldDefs, auction::fieldValList
 	double bh = getMaximumValue( params, 1 );	
 	
 	float totalReq = calculateRequestedQuantities(bids);
-	float qtySellLow = 0;
-	float qtySellHigh = 0;
-	double sellPriceLow = 0;
-	double sellPriceHigh = 0;
 	
 	cout << "totalReq:" << totalReq << "total units:" << bandwidth_to_sell_low + bandwidth_to_sell_high << endl;
-
-	auction::biddingObjectDB_t *bids_low = new auction::biddingObjectDB_t();
-	auction::biddingObjectDB_t *bids_high = new auction::biddingObjectDB_t();
 	
-	// Order bids classifying them by whether they compete on the low and high auction.
-	separateBids(bids,bl, bh, bids_low, bids_high);
-		
-	// Calculate the number of bids on both auctions.
-	int nl = calculateRequestedQuantities(bids_low);
-	int nh = calculateRequestedQuantities(bids_high);
-	
-	if ((totalReq > (bandwidth_to_sell_low + bandwidth_to_sell_high)) 
-		&& (bandwidth_to_sell_high < nh))
+	if (totalReq > (bandwidth_to_sell_low + bandwidth_to_sell_high))
 	{ 
 		
 		cout << "Splitting resources:" << endl;
 		
+		auction::auctioningObjectDB_t *bids_low = new auction::auctioningObjectDB_t();
+		auction::auctioningObjectDB_t *bids_high = new auction::auctioningObjectDB_t();
+		
+		// Order bids classifying them by whether they compete on the low and high auction.
+		separateBids(bids,bl, bh, bids_low, bids_high);
+		
+		// Calculate the number of bids on both auctions.
+		int nl = calculateRequestedQuantities(bids_low);
+		int nh = calculateRequestedQuantities(bids_high);
 		
 		double qStar = 0;
-		double Q = 0.1;
+		double Q = 0.2;
 		
 		cout << "Starting the execution of the mechanism" << endl;
 		
@@ -962,7 +955,7 @@ void auction::execute( auction::fieldDefList_t *fieldDefs, auction::fieldValList
 						bandwidth_to_sell_low, reserve_price_high, reserve_price_low, Q,  &a, &b);
 			qStar = a;			
 			
-			while ((qStar >= 0.25) and (Q <= 0.97)){
+			while ((qStar >= 0.25) and (Q <= 1.0)){
 				Q = Q + 0.03;
 				a = 0.01;
 				b = 0.8;
@@ -971,14 +964,16 @@ void auction::execute( auction::fieldDefList_t *fieldDefs, auction::fieldValList
 						bandwidth_to_sell_low, reserve_price_high, reserve_price_low, Q,  &a, &b);
 				
 				qStar = a;	
-														  
+				
+				cout << "Q:" << Q << "qStar:" << qStar << endl;
+										  
 			}
-			
-			cout << "Q:" << Q << " qStar:" << qStar << endl;
 			
 			delete mechanism;
 		}
-				
+		
+		cout << "Finished the execution of the mechanism" << endl;
+		
 		LAuctionRequestDB_t  lrequests(bids_low->size(), vector<alloc_proc_t>(1)  );
 		HAuctionRequestDB_t  hrequests;
 		
@@ -988,13 +983,12 @@ void auction::execute( auction::fieldDefList_t *fieldDefs, auction::fieldValList
 		// Execute auctions.
 		map<string,auction::BiddingObject *> alloctions_low;
 		
-		sellPriceLow = executeAuctionRandomAllocation(fieldDefs, fieldVals, reserve_price_low, aset, aname, start, stop, 
-										  lrequests, bandwidth_to_sell_low, alloctions_low, qtySellLow);
+		executeAuctionRandomAllocation(fieldDefs, fieldVals, reserve_price_low, aset, aname, start, stop, 
+										  lrequests, bandwidth_to_sell_low, alloctions_low);
 							
 		map<string,auction::BiddingObject *> alloctions_high;
-		
-		sellPriceHigh = executeAuction( fieldDefs, fieldVals, aset, aname, start, stop,
-						 hrequests, bandwidth_to_sell_high, alloctions_high, reserve_price_high, qtySellHigh);
+		executeAuction( fieldDefs, fieldVals, aset, aname, start, stop,
+						 hrequests, bandwidth_to_sell_low, alloctions_high, reserve_price_high);
 		
 		cout << "after executeAuction high budget users" << endl;
 		
@@ -1010,42 +1004,33 @@ void auction::execute( auction::fieldDefList_t *fieldDefs, auction::fieldValList
 		{
 			(*allocationdata)->push_back(alloc_iter->second);
 		}
-				
+
 		// Convert from the map to the final allocationDB result
 		for ( alloc_iter = alloctions_high.begin(); 
 					alloc_iter != alloctions_high.end(); ++alloc_iter )
 		{
 			(*allocationdata)->push_back(alloc_iter->second);
 		}
-				
-		// Write a log with data of the auction
-		std::ofstream fs;
-		string filename = aset + "_" + aname + "_" + "_twoauctiongeneralized.txt";
-		fs.open(filename.c_str(),ios::app);
-		if (!fs.fail()){
-			fs << "starttime:" << start << ":endtime:" << stop;
-			fs << ":demand:" << totalReq << ":demand low:" << nl << ":qty_sell_low:";
-			fs << qtySellLow << ":demand high:" << nh << ":qty_sell_high:" << qtySellHigh;
-			fs << ":sell_price_low:" << sellPriceLow << ":sell price_high:" << sellPriceHigh;
-			fs << ":Q:" << Q << ":qStar:" << qStar << "\n"; 
-			fs.close( );  
-		}
 		
+		// Free the memory allocated to these two containers.
+		delete bids_low;
+		delete bids_high;
 	} 
 	else {
 		
 		cout << "auctioning without splitting resources:" << endl;
-				
-		auction::biddingObjectDB_t *bids_zero_low = new auction::biddingObjectDB_t();
+		
+		// All bids get units and pay the reserved price of the L Auction
+		int nl, nh = 0;
+		auction::auctioningObjectDB_t *bids_low = new auction::auctioningObjectDB_t();
 		LAuctionRequestDB_t  lrequests(1, vector<alloc_proc_t>(1)  );
 		HAuctionRequestDB_t  hrequests;
 	
-		int nl2, nh2 = 0;
-		createRequest(bids_zero_low, bids, lrequests, hrequests, 0, reserve_price_low,  &nh2, &nl2);
+		createRequest(bids_low, bids, lrequests, hrequests, 0, reserve_price_low,  &nh, &nl);
 
 		map<string,auction::BiddingObject *> alloctions_high;
-		sellPriceLow = executeAuction( fieldDefs, fieldVals, aset, aname, start, stop,
-						hrequests, bandwidth_to_sell_high + bandwidth_to_sell_low, alloctions_high, reserve_price_low, qtySellLow);
+		executeAuction( fieldDefs, fieldVals, aset, aname, start, stop,
+						hrequests, totalReq, alloctions_high, reserve_price_low);
 
 		// Convert from the map to the final allocationDB result
 		map<string,auction::BiddingObject *>::iterator alloc_iter;
@@ -1054,34 +1039,18 @@ void auction::execute( auction::fieldDefList_t *fieldDefs, auction::fieldValList
 		{
 			(*allocationdata)->push_back(alloc_iter->second);
 		}
-	
-		// Write a log with data of the auction
-		std::ofstream fs;
-		string filename = aset + "_" + aname + "_" + "_twoauctiongeneralized.txt";
-		fs.open(filename.c_str(),ios::app);
-		if (!fs.fail()){
-			fs << "starttime:" << start << ":endtime:" << stop;
-			fs << ":demand:" << totalReq << ":demand_low:" << nl;
-			fs << ":demand_high:" << nh << ":qty_sell:" << qtySellLow;
-			fs << ":price:" << sellPriceLow << "\n"; 
-			fs.close( );  
-		}
-
-		delete bids_zero_low;
+		
+		delete bids_low;
 		
 	}
-
-	delete bids_low;
-	delete bids_high;
-
 #ifdef DEBUG	
 	cout << "two auction generalized module: end execute" <<  endl;
 #endif
 }
 
 void auction::execute_user( auction::fieldDefList_t *fieldDefs, auction::fieldValList_t *fieldVals, 
-							auction::fieldList_t *requestparams, auction::auctionDB_t *auctions, 
-							time_t start, time_t stop, auction::biddingObjectDB_t **biddata )
+							auction::fieldList_t *requestparams, auction::auctioningObjectDB_t *auctions, 
+							time_t start, time_t stop, auction::auctioningObjectDB_t **biddata )
 {
 #ifdef DEBUG
 	fprintf( stdout, "two auction generalized module: start execute_user \n");

@@ -375,7 +375,7 @@ void incrementQuantityAllocation(auction::fieldValList_t *fieldVals,
 	
 }
 
-int calculateRequestedQuantities(auction::biddingObjectDB_t *bids)
+int calculateRequestedQuantities(auction::auctioningObjectDB_t *bids)
 {
 
 #ifdef DEBUG
@@ -384,9 +384,11 @@ int calculateRequestedQuantities(auction::biddingObjectDB_t *bids)
 	
 	int sumQuantity = 0;
 	
-	auction::biddingObjectDBIter_t bid_iter; 
+	auction::auctioningObjectDBIter_t bid_iter; 
 	for (bid_iter = bids->begin(); bid_iter != bids->end(); ++bid_iter){
-		auction::BiddingObject * bid = *bid_iter;
+		auction::BiddingObject *bid = 
+					dynamic_cast<auction::BiddingObject *>(*bid_iter);
+					
 		auction::elementList_t *elems = bid->getElements();
 		auction::elementListIter_t elem_iter;
 		
@@ -404,12 +406,60 @@ int calculateRequestedQuantities(auction::biddingObjectDB_t *bids)
 	return sumQuantity;
 }
 
+double getBidPrice(auction::BiddingObject *bid)
+{
+	
+	double unitPrice = -1;
+	auction::elementList_t *elems = bid->getElements();
+				
+	auction::elementListIter_t elem_iter;
+	for ( elem_iter = elems->begin(); elem_iter != elems->end(); ++elem_iter )
+	{
+		unitPrice = getDoubleField(&(elem_iter->second), "unitprice");
+		break;
+	}
+	
+	return unitPrice;
+	
+}
+
+void separateBids(auction::auctioningObjectDB_t *bids, 
+				   double bl, double bh, auction::auctioningObjectDB_t *bids_low, 
+					 auction::auctioningObjectDB_t *bids_high)
+{
+
+#ifdef DEBUG
+	cout << "Starting separateBids" << endl;
+#endif
+
+	auction::auctioningObjectDB_t::iterator iter;
+	for (iter = bids->begin();iter != bids->end(); ++iter){
+		auction::BiddingObject *bid = 
+					dynamic_cast<auction::BiddingObject *>(*iter);
+					
+		double price = getBidPrice(bid);
+		
+		if (price >= 0){
+			if (price >bl){
+				bids_high->push_back(bid);
+			}	
+			else{ 
+				bids_low->push_back(bid);
+			}
+		}
+	}
+
+#ifdef DEBUG
+	cout << "Ending separateBids" << endl;
+#endif		
+
+}
 
 
 void auction::execute( auction::fieldDefList_t *fieldDefs, auction::fieldValList_t *fieldVals,  
 					   auction::configParam_t *params, string aset, string aname, time_t start, 
-					   time_t stop, auction::biddingObjectDB_t *bids, 
-					   auction::biddingObjectDB_t **allocationdata )
+					   time_t stop, auction::auctioningObjectDB_t *bids, 
+					   auction::auctioningObjectDB_t **allocationdata )
 {
 
 #ifdef DEBUG
@@ -420,15 +470,26 @@ void auction::execute( auction::fieldDefList_t *fieldDefs, auction::fieldValList
 	reserve_price = getReservePrice( params );	
 	subsidy_val = getSubsidy( params );
 	discriminating_bid = getDiscriminatingBid( params );
+
+	auction::auctioningObjectDB_t *bids_low_rct = new auction::auctioningObjectDB_t();
+	auction::auctioningObjectDB_t *bids_high_rct = new auction::auctioningObjectDB_t();
 	
 	float totReq = calculateRequestedQuantities(bids);
+
+	// Order bids classifying them by whether they compete on the low and high auction.
+	separateBids(bids,0.5, 1, bids_low_rct, bids_high_rct);
+		
+	// Calculate the number of bids on both auctions.
+	int nl = calculateRequestedQuantities(bids_low_rct);
+	int nh = calculateRequestedQuantities(bids_high_rct);
 	
 	std::multimap<double, alloc_proc_t>  orderedBids;
-	// Order Bids by elements.
-	auction::biddingObjectDBIter_t bid_iter; 
 	
+	// Order Bids by elements.
+	auction::auctioningObjectDBIter_t bid_iter; 
 	for (bid_iter = bids->begin(); bid_iter != bids->end(); ++bid_iter){
-		auction::BiddingObject * bid = *bid_iter;
+		auction::BiddingObject *bid = 
+					dynamic_cast<auction::BiddingObject *>(*bid_iter);
 				
 		auction::elementList_t *elems = bid->getElements();
 				
@@ -442,8 +503,8 @@ void auction::execute( auction::fieldDefList_t *fieldDefs, auction::fieldValList
 			
 			alloc_proc_t alloc;
 		
-			alloc.bidSet = bid->getBiddingObjectSet();
-			alloc.bidName = bid->getBiddingObjectName();
+			alloc.bidSet = bid->getSet();
+			alloc.bidName = bid->getName();
 			alloc.elementName = elem_iter->first;
 			alloc.sessionId = bid->getSession();
 			alloc.quantity = quantity;
@@ -548,11 +609,12 @@ void auction::execute( auction::fieldDefList_t *fieldDefs, auction::fieldValList
 	string filename = aset + "_" + aname + "_" + "_subsidy.txt";
 	fs.open(filename.c_str(),ios::app);
 	if (!fs.fail()){
-		cout << "opening the file: status ok" << endl;
-		
+
 		fs << "starttime:" << start << ":endtime:" << stop;
-		fs << ":demand:" << totReq << ":qty_sell:" << bandwidth_to_sell - qtyAvailable;
-		fs << ":price:" << sellPrice << "\n"; 
+		fs << ":demand:" << totReq << ":demand_low:" << nl << ":demand_high:" << nh;
+		fs << ":qty_sell:" << bandwidth_to_sell - qtyAvailable;
+		fs << ":sell price:" << sellPrice << "\n"; 
+		
 		fs.close( );
 	} else {
 		cout << "We had problems opening the file" << endl;
@@ -565,8 +627,8 @@ void auction::execute( auction::fieldDefList_t *fieldDefs, auction::fieldValList
 }
 
 void auction::execute_user( auction::fieldDefList_t *fieldDefs, auction::fieldValList_t *fieldVals, 
-							auction::fieldList_t *requestparams, auction::auctionDB_t *auctions, 
-							time_t start, time_t stop, auction::biddingObjectDB_t **biddata )
+							auction::fieldList_t *requestparams, auction::auctioningObjectDB_t *auctions, 
+							time_t start, time_t stop, auction::auctioningObjectDB_t **biddata )
 {
 #ifdef DEBUG
 	fprintf( stdout, "subsidy auction module: start execute_user \n");

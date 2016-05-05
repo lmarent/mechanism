@@ -18,9 +18,7 @@ pkgincludedir = $(includedir)/$(PACKAGE)
 API_INC		= $(top_srcdir)/include
 INC_DIR 	= $(top_srcdir)/include
 
-lib_LTLIBRARIES = libtwoauction.la libtwoauctionuser.la libtwoauctiongen.la \
-				  libtwoauctiongenuser.la libsubsidyauction.la \
-				  libsubsidyauctionuser.la libtwoauctionperinf.la libtwoauctionperinfuser.la
+lib_LTLIBRARIES = libtwoauction.la libtwoauctionuser.la libtwoauctiongen.la libtwoauctiongenuser.la libsubsidyauction.la libsubsidyauctionuser.la
 
 if ENABLE_DEBUG
 AM_CXXFLAGS = -I$(top_srcdir)/include $(LIBIPAP_CFLAGS) $(LIBAUCTIONFDTION_CFLAGS) \
@@ -34,7 +32,7 @@ endif
 #--------------------------- Two Auction Few Users
 #-----------------------------------------------------------------------
 
-libtwoauction_la_CPPFLAGS = -I$(top_srcdir)/include $(LIBIPAP_CFLAGS) $(LIBAUCTIONFDTION_CFLAGS) \
+libtwoauction_la_CPPFLAGS = $(LIBIPAP_CFLAGS) $(LIBAUCTIONFDTION_CFLAGS) \
 							$(LIBANSLP_MSG_CFLAGS) $(PQXX_CFLAGS)
 
 libtwoauction_la_SOURCES = TwoAuctionMechanism.cpp \
@@ -43,7 +41,7 @@ libtwoauction_la_SOURCES = TwoAuctionMechanism.cpp \
 libtwoauction_la_LIBADD = MiscProcModule.lo ProcError.lo $(LIBIPAP_LIBS)
 
 
-libtwoauctionuser_la_CPPFLAGS = -I$(top_srcdir)/include $(LIBIPAP_CFLAGS) $(LIBAUCTIONFDTION_CFLAGS) \
+libtwoauctionuser_la_CPPFLAGS = $(LIBIPAP_CFLAGS) $(LIBAUCTIONFDTION_CFLAGS) \
 								$(LIBANSLP_MSG_CFLAGS) $(PQXX_CFLAGS)
 
 libtwoauctionuser_la_SOURCES = twoauctionuser.cpp
@@ -54,7 +52,7 @@ libtwoauctionuser_la_LIBADD = MiscProcModule.lo ProcError.lo $(LIBIPAP_LIBS)
 #--------------------------- Two Auction Generalized 
 #-----------------------------------------------------------------------
 
-libtwoauctiongen_la_CPPFLAGS = -I$(top_srcdir)/include $(LIBIPAP_CFLAGS) $(LIBAUCTIONFDTION_CFLAGS) \
+libtwoauctiongen_la_CPPFLAGS = $(LIBIPAP_CFLAGS) $(LIBAUCTIONFDTION_CFLAGS) \
 							$(LIBANSLP_MSG_CFLAGS) $(PQXX_CFLAGS)
 
 libtwoauctiongen_la_SOURCES = TwoAuctionMechanismGeneralized.cpp \
@@ -63,7 +61,7 @@ libtwoauctiongen_la_SOURCES = TwoAuctionMechanismGeneralized.cpp \
 libtwoauctiongen_la_LIBADD = MiscProcModule.lo ProcError.lo $(LIBIPAP_LIBS)
 
 
-libtwoauctiongenuser_la_CPPFLAGS = -I$(top_srcdir)/include $(LIBIPAP_CFLAGS) $(LIBAUCTIONFDTION_CFLAGS) \
+libtwoauctiongenuser_la_CPPFLAGS = $(LIBIPAP_CFLAGS) $(LIBAUCTIONFDTION_CFLAGS) \
 								$(LIBANSLP_MSG_CFLAGS) $(PQXX_CFLAGS)
 
 libtwoauctiongenuser_la_SOURCES = TwoAuctionGeneralizedUser.cpp
@@ -74,7 +72,7 @@ libtwoauctiongenuser_la_LIBADD = MiscProcModule.lo ProcError.lo $(LIBIPAP_LIBS)
 #--------------------------- Subsidy Auction 
 #-----------------------------------------------------------------------
 
-libsubsidyauction_la_CPPFLAGS = -I$(top_srcdir)/include $(LIBIPAP_CFLAGS) $(LIBAUCTIONFDTION_CFLAGS) \
+libsubsidyauction_la_CPPFLAGS = $(LIBIPAP_CFLAGS) $(LIBAUCTIONFDTION_CFLAGS) \
 								$(LIBANSLP_MSG_CFLAGS) $(PQXX_CFLAGS)
 
 libsubsidyauction_la_SOURCES = subsidyauction.cpp
@@ -82,7 +80,7 @@ libsubsidyauction_la_SOURCES = subsidyauction.cpp
 libsubsidyauction_la_LIBADD = MiscProcModule.lo ProcError.lo $(LIBIPAP_LIBS)
 
 
-libsubsidyauctionuser_la_CPPFLAGS = -I$(top_srcdir)/include $(LIBIPAP_CFLAGS) $(LIBAUCTIONFDTION_CFLAGS) \
+libsubsidyauctionuser_la_CPPFLAGS = $(LIBIPAP_CFLAGS) $(LIBAUCTIONFDTION_CFLAGS) \
 									$(LIBANSLP_MSG_CFLAGS) $(PQXX_CFLAGS)
 
 libsubsidyauctionuser_la_SOURCES = subsidyauctionuser.cpp
@@ -91,27 +89,6 @@ libsubsidyauctionuser_la_LIBADD = MiscProcModule.lo ProcError.lo $(LIBIPAP_LIBS)
 
 
 LDADD = $(LIBIPAP_LIBS) $(PQXX_LIBS) $(LIBAUCTIONFDTION_LIBS)
-
-
-#-----------------------------------------------------------------------
-#--------------------------- Two Auction Perfect Information 
-#-----------------------------------------------------------------------
-
-libtwoauctionperinf_la_CPPFLAGS = -I$(top_srcdir)/include $(LIBIPAP_CFLAGS) $(LIBAUCTIONFDTION_CFLAGS) \
-								  $(LIBANSLP_MSG_CFLAGS) $(PQXX_CFLAGS)
-
-libtwoauctionperinf_la_SOURCES = TwoAuctionPerfectInformation.cpp
-
-libtwoauctionperinf_la_LIBADD = MiscProcModule.lo ProcError.lo $(LIBIPAP_LIBS)
-
-
-libtwoauctionperinfuser_la_CPPFLAGS = -I$(top_srcdir)/include $(LIBIPAP_CFLAGS) $(LIBAUCTIONFDTION_CFLAGS) \
-									  $(LIBANSLP_MSG_CFLAGS) $(PQXX_CFLAGS)
-
-libtwoauctionperinfuser_la_SOURCES = TwoAuctionPerfectInformationUser.cpp
-
-libtwoauctionperinfuser_la_LIBADD = MiscProcModule.lo ProcError.lo $(LIBIPAP_LIBS)
-
 
 
 # end of Makefile.am
