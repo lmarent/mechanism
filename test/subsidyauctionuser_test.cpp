@@ -16,7 +16,7 @@
 #include "Module.h"
 #include "ConstantsAum.h"
 #include "ProcModule.h" 
-
+#include "ProcError.h"
 
 using namespace auction;
 
@@ -135,6 +135,7 @@ void subsidyauctionuser_Test::test()
 	mod = loader->getModule(moduleName.c_str());
 	procmod = dynamic_cast<ProcModule*>(mod);
 
+
 	if (procmod != NULL){
 
 		configParam_t *params = new configParam_t[2];
@@ -170,8 +171,7 @@ void subsidyauctionuser_Test::test()
 		field_t field3;
 		field_t field4;
 		field_t field5;
-		
-	
+			
 		auction::fieldDefListIter_t iter; 
 		iter = auctionManagerPtr->getFieldDefs()->find("quantity");
 		if (iter != auctionManagerPtr->getFieldDefs()->end()){
@@ -206,6 +206,7 @@ void subsidyauctionuser_Test::test()
 			throw Error("field unitbudget not found");
 		}
 
+
 		fields.push_back(field1);
 		fields.push_back(field2);
 		fields.push_back(field3);
@@ -215,16 +216,23 @@ void subsidyauctionuser_Test::test()
 		
 		time_t start = time(NULL);
 		time_t end = start + 10;
+				
 		
-		procmod->getAPI()->execute_user(auctionManagerPtr->getFieldDefs(),
+		try
+		{
+			
+			procmod->getAPI()->execute_user(auctionManagerPtr->getFieldDefs(),
 										auctionManagerPtr->getFieldVals(),
 										&fields, auctions, 
 										start, end,
 										&ptr );
 		
-		auctioningObjectDBIter_t iter2;
-		for (iter2 = ptr->begin(); iter2 != ptr->end(); iter2++){
-			cout << "info:" << (*iter2)->getInfo() << endl;
+			auctioningObjectDBIter_t iter2;
+			for (iter2 = ptr->begin(); iter2 != ptr->end(); iter2++){
+				cout << "info:" << (*iter2)->getInfo() << endl;
+			}
+		} catch (ProcError &e) {
+			cout << "Error:" << e.getError() << endl;
 		}
 	}
 }

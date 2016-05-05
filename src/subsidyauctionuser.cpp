@@ -9,6 +9,7 @@
 #include "IpAp_template.h"
 #include "ProcError.h"
 #include "MiscProcModule.h"
+#include "ConfigManager.h"
 
 const int MOD_REINIT_REQUIRED_PARAMS = 1;
 
@@ -60,15 +61,13 @@ int check(auction::fieldDefList_t *fieldDefs, auction::fieldList_t *requestparam
 {
 
 #ifdef DEBUG
-	fprintf( stdout, "subsidy auction module: starting check \n");
+	fprintf( stdout, "subsidy auction module: starting check own data \n");
 #endif
 	
 	set<ipap_field_key>requiredFields;
 	requiredFields.insert(ipap_field_key(0,IPAP_FT_QUANTITY));				// Requested quantity.
 	requiredFields.insert(ipap_field_key(0,IPAP_FT_UNITBUDGET));  			// Budget by unit for all auctions.
 	requiredFields.insert(ipap_field_key(0,IPAP_FT_MAXUNITVALUATION));  	// Own valuation 
-	requiredFields.insert(ipap_field_key(0,IPAP_FT_MAXUNITVALUATION01));   	// group discrimating max valuation.
-	requiredFields.insert(ipap_field_key(0,IPAP_FT_SUBSIDY));   			// Subsidy given by the network operator.
 	
 	
 	set<ipap_field_key>::iterator iter;
@@ -79,7 +78,7 @@ int check(auction::fieldDefList_t *fieldDefs, auction::fieldList_t *requestparam
 				auction::IpApMessageParser::findField(fieldDefs, iter->get_eno(), iter->get_ftype());
 		 if ((fieldItem.name).empty()){
 #ifdef DEBUG
-			fprintf( stdout, "subsidy auction module: ending check - it does not pass the check, field not parametrized %d.%d \n", 
+			fprintf( stdout, "subsidy auction module: ending check own data - it does not pass the check, field not parametrized %d.%d \n", 
 							iter->get_eno(), iter->get_ftype());
 #endif			 
 			return 0;
@@ -87,7 +86,7 @@ int check(auction::fieldDefList_t *fieldDefs, auction::fieldList_t *requestparam
 		 } else {
 			if (auction::IpApMessageParser::isFieldIncluded(requestparams, fieldItem.name) == false){
 #ifdef DEBUG
-				fprintf( stdout, "subsidy auction module: ending check - it does not pass the check, field not included %d.%d \n", 
+				fprintf( stdout, "subsidy auction module: ending check own data - it does not pass the check, field not included %d.%d \n", 
 							iter->get_eno(), iter->get_ftype());
 #endif					
 				return 0;
@@ -103,7 +102,79 @@ int check(auction::fieldDefList_t *fieldDefs, auction::fieldList_t *requestparam
 	return 1;
 }
 
+float getSubsidy( auction::configParam_t *params )
+{
+ 
+#ifdef DEBUG
+	 cout << "Starting getSubsidy" << endl;
+#endif
+	
+     float subsidy = 0;
+     int numparams = 0;
+     
+     while (params[0].name != NULL) {
+		// in all the application we establish the rates and 
+		// burst parameters in bytes
+				        
+        if (!strcmp(params[0].name, "subsidy")) {
+			subsidy = (float) parseFloat( params[0].value );
+			numparams++;
+		}
+        params++;
+     }
+     
+     if (numparams == 0)
+		throw auction::ProcError(AUM_PROC_PARAMETER_ERROR, 
+					"subsidy auction init module - not enought parameters");
+	
+	if (subsidy <= 0)
+		throw auction::ProcError(AUM_FIELD_NOT_FOUND_ERROR, 
+					"subsidy auction init module - The given subsidy parameter is incorrect");
 
+#ifdef DEBUG
+	cout << "Ending getSubsidy - Subsidy:" << subsidy << endl;
+#endif
+	
+	return subsidy;
+     
+}
+
+double getDiscriminatingBid( auction::configParam_t *params )
+{
+ 
+#ifdef DEBUG
+	 cout << "Starting get Discriminating Bid" << endl;
+#endif
+	
+     double discriminatingBid = 0;
+     int numparams = 0;
+     
+     while (params[0].name != NULL) {
+		// in all the application we establish the rates and 
+		// burst parameters in bytes
+				        
+        if (!strcmp(params[0].name, "maxvalue01")) {
+			discriminatingBid = (float) parseDouble( params[0].value );
+			numparams++;
+		}
+        params++;
+     }
+     
+     if (numparams == 0)
+		throw auction::ProcError(AUM_PROC_PARAMETER_ERROR, 
+					"subsidy auction init module - not enought parameters");
+	
+	if (discriminatingBid <= 0)
+		throw auction::ProcError(AUM_FIELD_NOT_FOUND_ERROR, 
+					"subsidy auction init module - The given discriminating bid parameter (maxvalue01) is incorrect");
+
+#ifdef DEBUG
+	cout << "Ending Discriminating Bid:" << discriminatingBid << endl;
+#endif
+	
+	return discriminatingBid;
+     
+}
  
 
 auction::BiddingObject *
@@ -209,12 +280,6 @@ void auction::execute_user( auction::fieldDefList_t *fieldDefs, auction::fieldVa
 
 	   fieldItem = auction::IpApMessageParser::findField(fieldDefs, 0, IPAP_FT_QUANTITY);
 	   quantity = getFloatField(requestparams, fieldItem.name);
-
-	   fieldItem = auction::IpApMessageParser::findField(fieldDefs, 0, IPAP_FT_MAXUNITVALUATION01);
-	   maxGrpValation = getDoubleField(requestparams, fieldItem.name);
-
-	   fieldItem = auction::IpApMessageParser::findField(fieldDefs, 0, IPAP_FT_SUBSIDY);
-	   subsidy = getFloatField(requestparams, fieldItem.name);
 		
 	   budgetByAuction = budget / (int) auctions->size();
 	   valuationByAuction = valuation / (int) auctions->size();
@@ -224,22 +289,29 @@ void auction::execute_user( auction::fieldDefList_t *fieldDefs, auction::fieldVa
 			unitPrice = budgetByAuction;
 	   }
 	
-	   // Set the optimal bid.
-	   if (unitPrice < (maxGrpValation*subsidy)) {
-			if (unitPrice > maxGrpValation) {
-				unitPrice = maxGrpValation;
-			}
-	   }
 	   
 	   auctioningObjectDBIter_t auctIter;
 	   for (auctIter = auctions->begin(); auctIter != auctions->end(); ++auctIter)
 	   {
-			auction::Auction *auction = 
-						dynamic_cast<auction::Auction *>(*auctIter);
-			
-			auction::BiddingObject * bid = createBid( fieldDefs, fieldVals, auction, quantity, 
+
+		   Auction *auctionTmp = dynamic_cast<Auction *>(*auctIter);
+		   
+		   subsidy = getSubsidy( 
+					ConfigManager::getParamList( auctionTmp->getAction()->conf ));
+					
+		   maxGrpValation = getDiscriminatingBid( 
+					ConfigManager::getParamList( auctionTmp->getAction()->conf ));
+		   
+		   // Set the optimal bid.
+		   if (unitPrice < (maxGrpValation*subsidy)) {
+				if (unitPrice > maxGrpValation) {
+					unitPrice = maxGrpValation;
+				}
+		   }
+
+		   auction::BiddingObject * bid = createBid( fieldDefs, fieldVals, auctionTmp, quantity, 
 											unitPrice, start, stop );
-			(*biddata)->push_back(bid);
+		   (*biddata)->push_back(bid);
 	   }
 
 #ifdef DEBUG
