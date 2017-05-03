@@ -237,7 +237,7 @@ createBid( auction::fieldDefList_t *fieldDefs, auction::fieldValList_t *fieldVal
 	uint32_t lid = getId();
 	string bidName = uint32ToString(lid);
 
-    bid = new auction::BiddingObject(auct->getSetName(), auct->getAuctionName(), 
+    bid = new auction::BiddingObject(auct->getSet(), auct->getName(), 
 							bidSet, bidName, IPAP_BID, elements, options);
     
 	return bid;
@@ -246,15 +246,15 @@ createBid( auction::fieldDefList_t *fieldDefs, auction::fieldValList_t *fieldVal
 
 void auction::execute (auction::fieldDefList_t *fieldDefs, auction::fieldValList_t *fieldVals,  
 					   auction::configParam_t *params, string aset, string aname, 
-					   time_t start, time_t stop, auction::biddingObjectDB_t *bids, 
-					   auction::biddingObjectDB_t **allocationdata )
+					   time_t start, time_t stop, auction::auctioningObjectDB_t *bids, 
+					   auction::auctioningObjectDB_t **allocationdata )
 {
 	// NOTHING TO DO.
 }
 
 void auction::execute_user( auction::fieldDefList_t *fieldDefs, auction::fieldValList_t *fieldVals, 
-							auction::fieldList_t *requestparams, auction::auctionDB_t *auctions, 
-							time_t start, time_t stop, auction::biddingObjectDB_t **biddata )
+							auction::fieldList_t *requestparams, auction::auctioningObjectDB_t *auctions, 
+							time_t start, time_t stop, auction::auctioningObjectDB_t **biddata )
 {
 
 #ifdef DEBUG
@@ -290,11 +290,11 @@ void auction::execute_user( auction::fieldDefList_t *fieldDefs, auction::fieldVa
 	   }
 	
 	   
-	   auctionDBIter_t auctIter;
+	   auctioningObjectDBIter_t auctIter;
 	   for (auctIter = auctions->begin(); auctIter != auctions->end(); ++auctIter)
 	   {
 
-		   Auction *auctionTmp = *auctIter;
+		   Auction *auctionTmp = dynamic_cast<Auction *>(*auctIter);
 		   
 		   subsidy = getSubsidy( 
 					ConfigManager::getParamList( auctionTmp->getAction()->conf ));
@@ -309,7 +309,7 @@ void auction::execute_user( auction::fieldDefList_t *fieldDefs, auction::fieldVa
 				}
 		   }
 
-		   auction::BiddingObject * bid = createBid( fieldDefs, fieldVals, *auctIter, quantity, 
+		   auction::BiddingObject * bid = createBid( fieldDefs, fieldVals, auctionTmp, quantity, 
 											unitPrice, start, stop );
 		   (*biddata)->push_back(bid);
 	   }

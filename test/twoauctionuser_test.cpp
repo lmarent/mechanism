@@ -82,7 +82,7 @@ void twoauctionuser_Test::setUp()
 
 		int domain = 5;
 		
-		auctionManagerPtr = new AuctionManager(domain, filename, fieldValuename);
+		auctionManagerPtr = new AuctionManager(domain, filename, fieldValuename, false);
 		auto_ptr<EventScheduler> _evnt(new EventScheduler());
         evnt = _evnt;
 
@@ -124,8 +124,8 @@ void twoauctionuser_Test::tearDown()
 
 void twoauctionuser_Test::test() 
 {
-	biddingObjectDB_t bids;
-	biddingObjectDB_t *ptr = &bids;
+	auctioningObjectDB_t bids;
+	auctioningObjectDB_t *ptr = &bids;
 	string auctionSet = "1";
 	string auctionName = "1";
 	time_t             start = time(NULL);
@@ -159,7 +159,7 @@ void twoauctionuser_Test::test()
 		
 		templates = new ipap_template_container();
 		
-		auctionDB_t * auctions = auctionManagerPtr->parseAuctions(filename, templates);
+		auctioningObjectDB_t * auctions = auctionManagerPtr->parseAuctions(filename, templates);
 		
 		saveDelete(templates);
 				
@@ -216,7 +216,7 @@ void twoauctionuser_Test::test()
 										start, end,
 										&ptr );
 		
-		biddingObjectDBIter_t iter2;
+		auctioningObjectDBIter_t iter2;
 		for (iter2 = ptr->begin(); iter2 != ptr->end(); iter2++){
 			cout << "info:" << (*iter2)->getInfo() << endl;
 		}

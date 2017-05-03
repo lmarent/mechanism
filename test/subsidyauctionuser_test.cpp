@@ -16,7 +16,7 @@
 #include "Module.h"
 #include "ConstantsAum.h"
 #include "ProcModule.h" 
-
+#include "ProcError.h"
 
 using namespace auction;
 
@@ -82,7 +82,7 @@ void subsidyauctionuser_Test::setUp()
 
 		int domain = 5;
 		
-		auctionManagerPtr = new AuctionManager(domain, filename, fieldValuename);
+		auctionManagerPtr = new AuctionManager(domain, filename, fieldValuename, false);
 		auto_ptr<EventScheduler> _evnt(new EventScheduler());
         evnt = _evnt;
 
@@ -124,8 +124,8 @@ void subsidyauctionuser_Test::tearDown()
 
 void subsidyauctionuser_Test::test() 
 {
-	biddingObjectDB_t bids;
-	biddingObjectDB_t *ptr = &bids;
+	auctioningObjectDB_t bids;
+	auctioningObjectDB_t *ptr = &bids;
 	string auctionSet = "1";
 	string auctionName = "1";
 	time_t             start = time(NULL);
@@ -134,6 +134,7 @@ void subsidyauctionuser_Test::test()
 	
 	mod = loader->getModule(moduleName.c_str());
 	procmod = dynamic_cast<ProcModule*>(mod);
+
 
 	if (procmod != NULL){
 
@@ -159,7 +160,7 @@ void subsidyauctionuser_Test::test()
 		
 		templates = new ipap_template_container();
 		
-		auctionDB_t * auctions = auctionManagerPtr->parseAuctions(filename, templates);
+		auctioningObjectDB_t * auctions = auctionManagerPtr->parseAuctions(filename, templates);
 		
 		saveDelete(templates);
 				
@@ -170,8 +171,7 @@ void subsidyauctionuser_Test::test()
 		field_t field3;
 		field_t field4;
 		field_t field5;
-		
-	
+			
 		auction::fieldDefListIter_t iter; 
 		iter = auctionManagerPtr->getFieldDefs()->find("quantity");
 		if (iter != auctionManagerPtr->getFieldDefs()->end()){
@@ -206,6 +206,7 @@ void subsidyauctionuser_Test::test()
 			throw Error("field unitbudget not found");
 		}
 
+
 		fields.push_back(field1);
 		fields.push_back(field2);
 		fields.push_back(field3);
@@ -215,16 +216,23 @@ void subsidyauctionuser_Test::test()
 		
 		time_t start = time(NULL);
 		time_t end = start + 10;
+				
 		
-		procmod->getAPI()->execute_user(auctionManagerPtr->getFieldDefs(),
+		try
+		{
+			
+			procmod->getAPI()->execute_user(auctionManagerPtr->getFieldDefs(),
 										auctionManagerPtr->getFieldVals(),
 										&fields, auctions, 
 										start, end,
 										&ptr );
 		
-		biddingObjectDBIter_t iter2;
-		for (iter2 = ptr->begin(); iter2 != ptr->end(); iter2++){
-			cout << "info:" << (*iter2)->getInfo() << endl;
+			auctioningObjectDBIter_t iter2;
+			for (iter2 = ptr->begin(); iter2 != ptr->end(); iter2++){
+				cout << "info:" << (*iter2)->getInfo() << endl;
+			}
+		} catch (ProcError &e) {
+			cout << "Error:" << e.getError() << endl;
 		}
 	}
 }
